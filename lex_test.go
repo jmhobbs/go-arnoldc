@@ -45,6 +45,11 @@ func TestLex(t *testing.T) {
 			source:      "IT'S SHOWTIME\nTALK TO THE HAND \"hello world\"\nYOU HAVE BEEN TERMINATED",
 			token_types: []int{TK_MAIN_OPEN, int('\n'), TK_PRINT, String, int('\n'), TK_MAIN_CLOSE},
 		},
+		{
+			name:        "Declare Variable",
+			source:      "HEY CHRISTMAS TREE myVar",
+			token_types: []int{TK_DECLARE, Variable},
+		},
 	}
 
 	var (

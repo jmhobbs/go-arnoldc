@@ -6,8 +6,9 @@ import (
 )
 
 func TestParser(t *testing.T) {
-	src := `
-IT'S SHOWTIME
+	src := `IT'S SHOWTIME
+HEY CHRISTMAS TREE myVar
+YOU SET US UP 10
 TALK TO THE HAND "hello world"
 YOU HAVE BEEN TERMINATED`
 
@@ -21,14 +22,19 @@ YOU HAVE BEEN TERMINATED`
 	}(f)
 
 	p := ArnoldC{input: f}
+	p.Debug = true
 	program, err := p.Parse()
 	if err != nil {
-		t.Errorf("error parsing: %v", err)
+		t.Fatalf("error parsing: %v", err)
 	}
 
 	expect := Program{
 		Main: Function{
 			Expressions: []Expression{
+				Expression{
+					Instruction: "HEY CHRISTMAS TREE",
+					Args:        []Value{VariableValue{"myVar"}, IntegerValue{10}},
+				},
 				Expression{
 					Instruction: "TALK TO THE HAND",
 					Args:        []Value{StringValue{"hello world"}},

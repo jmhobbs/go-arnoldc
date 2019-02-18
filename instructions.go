@@ -8,5 +8,7 @@ func init() {
 		"IT'S SHOWTIME":            TK_MAIN_OPEN,
 		"YOU HAVE BEEN TERMINATED": TK_MAIN_CLOSE,
 		"TALK TO THE HAND":         TK_PRINT,
+		"HEY CHRISTMAS TREE":       TK_DECLARE,
+		"YOU SET US UP":            TK_INITIALIZE,
 	}
 }

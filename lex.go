@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 	"unicode"
@@ -15,16 +16,18 @@ type ArnoldC struct {
 	input   io.ReadSeeker
 	program Program // Our result object
 	err     error   // The last error to come out of the parser
+	Debug   bool    // Print debugging messages
 	// State
 	scannedInstruction bool
 	// Where are we in out input?
 	line        int
 	offset      int
 	currentByte byte
+	// TODO: Keep the current line in memory so we can add it to errors?
 }
 
 func New(input io.ReadSeeker) *ArnoldC {
-	return &ArnoldC{input: input}
+	return &ArnoldC{input: input, line: 1, Debug: false}
 }
 
 func (a *ArnoldC) Parse() (*Program, error) {
@@ -33,6 +36,12 @@ func (a *ArnoldC) Parse() (*Program, error) {
 		return nil, a.err
 	}
 	return &a.program, nil
+}
+
+func (a *ArnoldC) log(format string, args ...interface{}) {
+	if a.Debug {
+		fmt.Fprintf(os.Stderr, "Lexer: "+format+"\n", args...)
+	}
 }
 
 // Error satisfies yyLexer.
@@ -80,8 +89,10 @@ func (a *ArnoldC) backup() error {
 }
 
 func (a *ArnoldC) scanInstruction(lval *yySymType) int {
+	a.log("> scanInstruction")
 	buf := bytes.NewBuffer(nil)
 	for b := a.next(); ; b = a.next() {
+		a.log("%q  %d", b, b)
 		switch {
 		case (unicode.IsUpper(rune(b)) || b == '\'' || unicode.IsSpace(rune(b))) && b != '\n':
 			buf.WriteByte(b)
@@ -90,6 +101,7 @@ func (a *ArnoldC) scanInstruction(lval *yySymType) int {
 			if len(lval.str) == 0 {
 				continue
 			}
+			a.log("str = %q", lval.str)
 			if b != 0 {
 				a.backup()
 			}
@@ -109,7 +121,9 @@ func (a *ArnoldC) scanInstruction(lval *yySymType) int {
 }
 
 func (a *ArnoldC) scanNormal(lval *yySymType) int {
+	a.log("> scanNormal")
 	for b := a.next(); b != 0; b = a.next() {
+		a.log("%q  %d", b, b)
 		switch {
 		case '\n' == b:
 			a.line++
@@ -135,11 +149,14 @@ func (a *ArnoldC) scanNormal(lval *yySymType) int {
 }
 
 func (a *ArnoldC) scanString(lval *yySymType) int {
+	a.log("> scanString")
 	buf := bytes.NewBuffer(nil)
 	for b := a.next(); b != 0; b = a.next() {
+		a.log("%q  %d", b, b)
 		switch b {
 		case '"':
 			lval.str = buf.String()
+			a.log("str = %q", lval.str)
 			return String
 		default:
 			buf.WriteByte(b)
@@ -150,13 +167,19 @@ func (a *ArnoldC) scanString(lval *yySymType) int {
 }
 
 func (a *ArnoldC) scanVariable(lval *yySymType) int {
+	a.log("> scanVariable")
 	buf := bytes.NewBuffer(nil)
 	for b := a.next(); ; b = a.next() {
+		a.log("%q  %d", b, b)
 		switch {
 		case unicode.IsLetter(rune(b)):
 			buf.WriteByte(b)
+		case b == '\n':
+			a.backup()
+			fallthrough
 		default:
 			lval.str = buf.String()
+			a.log("str = %q", lval.str)
 			return Variable
 		}
 	}
@@ -165,8 +188,10 @@ func (a *ArnoldC) scanVariable(lval *yySymType) int {
 }
 
 func (a *ArnoldC) scanInteger(lval *yySymType) int {
+	a.log("> scanInteger")
 	buf := bytes.NewBuffer(nil)
 	for b := a.next(); ; b = a.next() {
+		a.log("%q  %d", b, b)
 		if unicode.IsDigit(rune(b)) {
 			buf.WriteByte(b)
 		} else {
@@ -176,6 +201,7 @@ func (a *ArnoldC) scanInteger(lval *yySymType) int {
 				return LexError
 			}
 			lval.integer = val
+			a.log("integer = %d", lval.integer)
 			return Integer
 		}
 	}

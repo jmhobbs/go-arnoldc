@@ -26,6 +26,7 @@ func setProgram(l yyLexer, v Program) {
 %token TK_MAIN_OPEN TK_MAIN_CLOSE
 %token TK_PRINT
 %token TK_TRUE TK_FALSE
+%token TK_DECLARE TK_INITIALIZE
 
 %type <value> value
 %type <expression> expression
@@ -33,7 +34,7 @@ func setProgram(l yyLexer, v Program) {
 %type <function> main
 %type <program> program
 
-%type <str> TK_PRINT
+%type <str> TK_PRINT TK_DECLARE TK_INITIALIZE
 
 %start program
 
@@ -44,7 +45,7 @@ program: main
            setProgram(yylex, Program{Main: $1})
          }
 
-main: TK_MAIN_OPEN '\n' expressions '\n' TK_MAIN_CLOSE
+main: TK_MAIN_OPEN newlines expressions newlines TK_MAIN_CLOSE
       {
         $$ = Function{Name: "", Arguments: []string{}, Expressions: $3}
       }
@@ -53,7 +54,7 @@ expressions: expression
              {
                $$ = []Expression{$1}
              }
-           | expressions '\n' expression
+           | expressions newlines expression
              {
                $1 = append($1, $3)
                $$ = $1
@@ -62,6 +63,10 @@ expressions: expression
 expression: TK_PRINT value
             {
               $$ = Expression{$1, []Value{$2}}
+            }
+          | TK_DECLARE Variable newlines TK_INITIALIZE Integer
+            {
+              $$ = Expression{$1, []Value{VariableValue{$2}, IntegerValue{$5}}}
             }
 
 value: String
@@ -84,3 +89,8 @@ value: String
        {
          $$ = BoolValue{false}
        }
+
+newlines: '\n'
+        | '\r' '\n'
+        | newlines '\n'
+        | newlines '\r' '\n'
