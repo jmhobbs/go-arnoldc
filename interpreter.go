@@ -10,10 +10,14 @@ type interpreter struct {
 }
 
 func (i interpreter) Run(program *Program, stdout, stderr io.Writer) error {
+	i.variables = make(map[string]Value)
+
 	for _, expression := range program.Main.Expressions {
 		switch expression.Instruction {
 		case "TALK TO THE HAND":
-			fmt.Fprintf(stdout, "%s", i.resolveValue(expression.Args[0]))
+			fmt.Fprintln(stdout, i.resolveValue(expression.Args[0]))
+		case "HEY CHRISTMAS TREE":
+			i.variables[expression.Args[0].Value().(string)] = expression.Args[1]
 		default:
 			return fmt.Errorf("runtime error; unknown instruction %q", expression.Instruction)
 		}
@@ -30,7 +34,7 @@ func (i interpreter) resolveValue(v Value) interface{} {
 			// TODO
 			panic("Well that isn't good.")
 		}
-		return value
+		return value.Value()
 	default:
 		return v.Value()
 	}
