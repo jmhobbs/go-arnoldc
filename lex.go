@@ -80,6 +80,7 @@ func (a *ArnoldC) next() byte {
 
 // Seek input backwards one byte.
 func (a *ArnoldC) backup() error {
+	a.log("<- backup")
 	_, err := a.input.Seek(-1, io.SeekCurrent)
 	if err == nil {
 		a.offset--
@@ -111,6 +112,8 @@ func (a *ArnoldC) scanInstruction(lval *yySymType) int {
 			a.scannedInstruction = true
 			tk, ok := instructions[lval.str]
 			if !ok {
+				a.log("!! Unknown Instruction")
+				// TODO: Store error.
 				return LexError
 			}
 			if '\n' == b {
@@ -120,7 +123,6 @@ func (a *ArnoldC) scanInstruction(lval *yySymType) int {
 			return tk
 		}
 	}
-	return 0
 }
 
 func (a *ArnoldC) scanNormal(lval *yySymType) int {
@@ -201,6 +203,8 @@ func (a *ArnoldC) scanInteger(lval *yySymType) int {
 			a.backup()
 			val, err := strconv.Atoi(buf.String())
 			if err != nil {
+				a.log("!! Invalid Integer")
+				// TODO: Store error.
 				return LexError
 			}
 			lval.integer = val

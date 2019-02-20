@@ -36,14 +36,14 @@ func setProgram(l yyLexer, v Program) {
 %token TK_IF TK_ELSE TK_END_IF
 %token TK_WHILE TK_END_WHILE
 
-%type <value> value
-%type <statements> statements
-%type <expression> expression
+%type <value> value number
+%type <statements> statements arithmetics
+%type <expression> expression arithmetic
 %type <block> block
 %type <function> main
 %type <program> program
 
-%type <str> TK_PRINT TK_DECLARE TK_INITIALIZE TK_ASSIGNMENT
+%type <str> TK_PRINT TK_DECLARE TK_INITIALIZE TK_ASSIGNMENT TK_ADD TK_SUBTRACT TK_MULTIPLY TK_DIVIDE TK_FIRST_OPERAND
 
 %start program
 
@@ -87,28 +87,58 @@ expression: TK_PRINT value
               $$ = Expression{$1, []Value{VariableValue{$2}, IntegerValue{$4}}}
             }
 
-block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND Integer TK_ASSIGNMENT_END
+block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND Integer arithmetics TK_ASSIGNMENT_END
        {
-         $$ = Block{$1, []Value{VariableValue{$1}}, []Statement{}}
+         $$ = Block{$1, []Value{VariableValue{$2}}, append([]Statement{Expression{$3, []Value{IntegerValue{$4}}}}, $5...)}
        }
+
+
+arithmetics: arithmetic
+             {
+               $$ = []Statement{$1}
+             }
+           | arithmetics arithmetic
+             {
+               $1 = append($1, $2)
+               $$ = $1
+             }
+
+arithmetic: TK_ADD number
+            {
+              $$ = Expression{$1, []Value{$2}}
+            }
+          | TK_SUBTRACT number
+            {
+              $$ = Expression{$1, []Value{$2}}
+            }
+          | TK_MULTIPLY number
+            {
+              $$ = Expression{$1, []Value{$2}}
+            }
+          | TK_DIVIDE number
+            {
+              $$ = Expression{$1, []Value{$2}}
+            }
+
+number: Variable
+         {
+           $$ = VariableValue{$1}
+         }
+       | Integer
+         {
+           $$ = IntegerValue{$1}
+         }
+       | TK_TRUE
+         {
+           $$ = IntegerValue{1}
+         }
+       | TK_FALSE
+         {
+           $$ = IntegerValue{0}
+         }
 
 value: String
        {
          $$ = StringValue{$1}
        }
-     | Variable
-       {
-         $$ = VariableValue{$1}
-       }
-     | Integer
-       {
-         $$ = IntegerValue{$1}
-       }
-     | TK_TRUE
-       {
-         $$ = BoolValue{true}
-       }
-     | TK_FALSE
-       {
-         $$ = BoolValue{false}
-       }
+     | number

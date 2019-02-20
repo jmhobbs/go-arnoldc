@@ -10,6 +10,11 @@ func TestParser(t *testing.T) {
 HEY CHRISTMAS TREE myVar
 YOU SET US UP 10
 TALK TO THE HAND "hello world"
+GET TO THE CHOPPER a
+HERE IS MY INVITATION 4
+GET UP b
+YOU'RE FIRED 2
+ENOUGH TALK
 YOU HAVE BEEN TERMINATED`
 
 	f, err := fileFromString(src)
@@ -37,6 +42,24 @@ YOU HAVE BEEN TERMINATED`
 				Expression{
 					Instruction: "TALK TO THE HAND",
 					Args:        []Value{StringValue{"hello world"}},
+				},
+				Block{
+					Instruction: "GET TO THE CHOPPER",
+					Args:        []Value{VariableValue{"a"}},
+					Statements: []Statement{
+						Expression{
+							Instruction: "HERE IS MY INVITATION",
+							Args:        []Value{IntegerValue{4}},
+						},
+						Expression{
+							Instruction: "GET UP",
+							Args:        []Value{VariableValue{"b"}},
+						},
+						Expression{
+							Instruction: "YOU'RE FIRED",
+							Args:        []Value{IntegerValue{2}},
+						},
+					},
 				},
 			},
 		},
