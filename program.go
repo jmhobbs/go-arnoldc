@@ -20,6 +20,18 @@ func (p Program) Run(stdout, stderr io.Writer) error {
 	return i.Run(&p, stdout, stderr)
 }
 
+// A Statement is either an Expression, or a Block
+type Statement interface {
+	Type() StatementType
+}
+
+type StatementType int
+
+const (
+	ExpressionType StatementType = iota
+	BlockType
+)
+
 // A Function is either the Main function, or a user defined method.
 type Function struct {
 	// The name of the function, which is empty for Main
@@ -27,11 +39,11 @@ type Function struct {
 	// Names of any arguments to this function
 	Arguments []string
 	// The actual lines to be executed in this function
-	Expressions []Expression
+	Statements []Statement
 }
 
 func (f Function) String() string {
-	return fmt.Sprintf("Function(%q, Arguments: %v, Expressions: %v)", f.Name, f.Arguments, f.Expressions)
+	return fmt.Sprintf("Function(%q, Arguments: %v, Statements: %v)", f.Name, f.Arguments, f.Statements)
 }
 
 // An Expression is a single line of an ArnoldC program.  It is an instruction and any parameters to that instruction.
@@ -40,6 +52,21 @@ type Expression struct {
 	Args        []Value
 }
 
+func (e Expression) Type() StatementType {
+	return ExpressionType
+}
+
 func (e Expression) String() string {
 	return fmt.Sprintf("Expression(%q, %v)", e.Instruction, e.Args)
+}
+
+// A block is a group of expressions, like an if statement or an assignment
+type Block struct {
+	Instruction string
+	Args        []Value
+	Statements  []Statement
+}
+
+func (b Block) Type() StatementType {
+	return BlockType
 }

@@ -22,7 +22,6 @@ YOU HAVE BEEN TERMINATED`
 	}(f)
 
 	p := ArnoldC{input: f}
-	p.Debug = true
 	program, err := p.Parse()
 	if err != nil {
 		t.Fatalf("error parsing: %v", err)
@@ -30,7 +29,7 @@ YOU HAVE BEEN TERMINATED`
 
 	expect := Program{
 		Main: Function{
-			Expressions: []Expression{
+			Statements: []Statement{
 				Expression{
 					Instruction: "HEY CHRISTMAS TREE",
 					Args:        []Value{VariableValue{"myVar"}, IntegerValue{10}},

@@ -12,14 +12,15 @@ type interpreter struct {
 func (i interpreter) Run(program *Program, stdout, stderr io.Writer) error {
 	i.variables = make(map[string]Value)
 
-	for _, expression := range program.Main.Expressions {
-		switch expression.Instruction {
+	for _, expression := range program.Main.Statements {
+		// TODO: Expression vs. Block
+		switch expression.(Expression).Instruction {
 		case "TALK TO THE HAND":
-			fmt.Fprintln(stdout, i.resolveValue(expression.Args[0]))
+			fmt.Fprintln(stdout, i.resolveValue(expression.(Expression).Args[0]))
 		case "HEY CHRISTMAS TREE":
-			i.variables[expression.Args[0].Value().(string)] = expression.Args[1]
+			i.variables[expression.(Expression).Args[0].Value().(string)] = expression.(Expression).Args[1]
 		default:
-			return fmt.Errorf("runtime error; unknown instruction %q", expression.Instruction)
+			return fmt.Errorf("runtime error; unknown instruction %q", expression.(Expression).Instruction)
 		}
 	}
 	return nil
