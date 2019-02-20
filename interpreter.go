@@ -18,7 +18,11 @@ func (i *interpreter) Run(program *Program, stdout, stderr io.Writer) error {
 
 			switch expression.Instruction {
 			case "TALK TO THE HAND":
-				fmt.Fprintln(stdout, i.resolveValue(expression.Args[0]))
+				value, err := i.resolveValue(expression.Args[0])
+				if err != nil {
+					return fmt.Errorf("runtime error; %v", err)
+				}
+				fmt.Fprintln(stdout, value)
 			case "HEY CHRISTMAS TREE":
 				i.variables[expression.Args[0].Value().(string)] = expression.Args[1]
 			default:
@@ -42,29 +46,27 @@ func (i *interpreter) Run(program *Program, stdout, stderr io.Writer) error {
 	return nil
 }
 
-func (i *interpreter) resolveValue(v Value) interface{} {
-	switch v.Type() {
-	case VariableType:
+// Resolve a value to it's underlying type, following variable references.
+func (i *interpreter) resolveValue(v Value) (interface{}, error) {
+	if v.Type() == VariableType {
 		var varName string = v.Value().(string)
 		value, ok := i.variables[varName]
 		if !ok {
-			// TODO
-			panic("Well that isn't good.")
+			return nil, fmt.Errorf("undefined variable %q", varName)
 		}
-		return value.Value()
-	default:
-		return v.Value()
+		return value.Value(), nil
 	}
+	return v.Value(), nil
 }
 
+// Resolve a value to it's underlying integer, following variable references.
 func (i *interpreter) resolveNumber(v Value) (int, error) {
 	switch v.Type() {
 	case VariableType:
 		var varName string = v.Value().(string)
 		value, ok := i.variables[varName]
 		if !ok {
-			// TODO
-			panic("Well that isn't good.")
+			return 0, fmt.Errorf("undefined variable %q", varName)
 		}
 		return value.Value().(int), nil
 	case IntegerType:
