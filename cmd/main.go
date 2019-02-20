@@ -6,6 +6,7 @@ import (
 	"os"
 
 	arnoldc "github.com/jmhobbs/go-arnoldc"
+	"github.com/jmhobbs/go-arnoldc/runtime"
 )
 
 func main() {
@@ -27,7 +28,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = program.Run(os.Stdout, os.Stderr)
+	i := runtime.New(os.Stdout, os.Stderr)
+	err = i.Run(program)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)

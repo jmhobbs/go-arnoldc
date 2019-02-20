@@ -2,7 +2,6 @@ package arnoldc
 
 import (
 	"fmt"
-	"io"
 )
 
 // Program represents the ArnoldC program as a collection of Functions.
@@ -13,11 +12,6 @@ type Program struct {
 
 func (p Program) String() string {
 	return fmt.Sprintf("ArnoldC(Main: %v, Methods: %v)", p.Main, p.Methods)
-}
-
-func (p Program) Run(stdout, stderr io.Writer) error {
-	i := &interpreter{}
-	return i.Run(&p, stdout, stderr)
 }
 
 // A Statement is either an Expression, or a Block

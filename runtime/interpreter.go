@@ -1,8 +1,10 @@
-package arnoldc
+package runtime
 
 import (
 	"fmt"
 	"io"
+
+	arnoldc "github.com/jmhobbs/go-arnoldc"
 )
 
 const (
@@ -10,24 +12,29 @@ const (
 	FALSE int = 0
 )
 
-type interpreter struct {
-	variables map[string]Value
+type Interpreter struct {
+	variables map[string]arnoldc.Value
 	stdout    io.Writer
 	stderr    io.Writer
 }
 
-func (i *interpreter) Run(program *Program, stdout, stderr io.Writer) error {
-	i.variables = make(map[string]Value)
-	i.stdout = stdout
-	i.stderr = stderr
+func New(stdout, stderr io.Writer) *Interpreter {
+	return &Interpreter{
+		variables: make(map[string]arnoldc.Value),
+		stdout:    stdout,
+		stderr:    stderr,
+	}
+}
+
+func (i *Interpreter) Run(program *arnoldc.Program) error {
 	i.executeStatements(program.Main.Statements)
 	return nil
 }
 
-func (i *interpreter) executeStatements(statements []Statement) error {
+func (i *Interpreter) executeStatements(statements []arnoldc.Statement) error {
 	for _, statement := range statements {
-		if ExpressionType == statement.Type() {
-			expression := statement.(Expression)
+		if arnoldc.ExpressionType == statement.Type() {
+			expression := statement.(arnoldc.Expression)
 
 			switch expression.Instruction {
 			case "TALK TO THE HAND":
@@ -42,7 +49,7 @@ func (i *interpreter) executeStatements(statements []Statement) error {
 				return fmt.Errorf("runtime error; unknown instruction %q", expression.Instruction)
 			}
 		} else {
-			block := statement.(Block)
+			block := statement.(arnoldc.Block)
 
 			switch block.Instruction {
 			case "GET TO THE CHOPPER":
@@ -62,8 +69,8 @@ func (i *interpreter) executeStatements(statements []Statement) error {
 }
 
 // Resolve a value to it's underlying type, following variable references.
-func (i *interpreter) resolveValue(v Value) (interface{}, error) {
-	if v.Type() == VariableType {
+func (i *Interpreter) resolveValue(v arnoldc.Value) (interface{}, error) {
+	if v.Type() == arnoldc.VariableType {
 		var varName string = v.Value().(string)
 		value, ok := i.variables[varName]
 		if !ok {
@@ -75,16 +82,16 @@ func (i *interpreter) resolveValue(v Value) (interface{}, error) {
 }
 
 // Resolve a value to it's underlying integer, following variable references.
-func (i *interpreter) resolveNumber(v Value) (int, error) {
+func (i *Interpreter) resolveNumber(v arnoldc.Value) (int, error) {
 	switch v.Type() {
-	case VariableType:
+	case arnoldc.VariableType:
 		var varName string = v.Value().(string)
 		value, ok := i.variables[varName]
 		if !ok {
 			return 0, fmt.Errorf("undefined variable %q", varName)
 		}
 		return value.Value().(int), nil
-	case IntegerType:
+	case arnoldc.IntegerType:
 		return v.Value().(int), nil
 	default:
 		return 0, fmt.Errorf("invalid value for number type")
@@ -92,19 +99,19 @@ func (i *interpreter) resolveNumber(v Value) (int, error) {
 }
 
 // Execute and return an Assignment Block
-func (i *interpreter) assigmentBlock(block Block) error {
+func (i *Interpreter) assigmentBlock(block arnoldc.Block) error {
 	v := block.Args[0]
 
-	if v.Type() != VariableType {
+	if v.Type() != arnoldc.VariableType {
 		return fmt.Errorf("can not assign results to a non-variable")
 	}
 
 	// TODO: Setup Instruction
 	statement := block.Statements[0]
-	if ExpressionType != statement.Type() {
+	if arnoldc.ExpressionType != statement.Type() {
 		return fmt.Errorf("illegal block inside assignment")
 	}
-	expression := statement.(Expression)
+	expression := statement.(arnoldc.Expression)
 	if expression.Instruction != "HERE IS MY INVITATION" {
 		return fmt.Errorf("variable assignment must start with a first operand")
 	}
@@ -115,11 +122,11 @@ func (i *interpreter) assigmentBlock(block Block) error {
 	}
 
 	for _, statement := range block.Statements[1:] {
-		if ExpressionType != statement.Type() {
-			return fmt.Errorf("illegal block inside assignment: %q", statement.(Block).Instruction)
+		if arnoldc.ExpressionType != statement.Type() {
+			return fmt.Errorf("illegal block inside assignment: %q", statement.(arnoldc.Block).Instruction)
 		}
 
-		expression := statement.(Expression)
+		expression := statement.(arnoldc.Expression)
 
 		// All of these should have exactly one argument.
 		arg, err := i.resolveNumber(expression.Args[0])
@@ -165,22 +172,22 @@ func (i *interpreter) assigmentBlock(block Block) error {
 		}
 	}
 
-	i.variables[v.Value().(string)] = IntegerValue{x}
+	i.variables[v.Value().(string)] = arnoldc.NewIntegerValue(x)
 
 	return nil
 }
 
-func (i *interpreter) ifElseBlock(block Block) error {
+func (i *Interpreter) ifElseBlock(block arnoldc.Block) error {
 	v, err := i.resolveNumber(block.Args[0])
 	if err != nil {
 		return err
 	}
 
 	if v != FALSE {
-		ifBlock := block.Statements[0].(Block)
+		ifBlock := block.Statements[0].(arnoldc.Block)
 		return i.executeStatements(ifBlock.Statements)
 	} else if len(block.Statements) > 1 {
-		elseBlock := block.Statements[1].(Block)
+		elseBlock := block.Statements[1].(arnoldc.Block)
 		return i.executeStatements(elseBlock.Statements)
 	}
 

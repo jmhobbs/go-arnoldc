@@ -40,3 +40,4 @@ type IntegerValue struct {
 func (v IntegerValue) Type() ValueType    { return IntegerType }
 func (v IntegerValue) String() string     { return fmt.Sprintf("Integer(%d)", v.v) }
 func (v IntegerValue) Value() interface{} { return v.v }
+func NewIntegerValue(v int) IntegerValue  { return IntegerValue{v} }
