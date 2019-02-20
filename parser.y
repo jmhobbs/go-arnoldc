@@ -45,18 +45,18 @@ program: main
            setProgram(yylex, Program{Main: $1})
          }
 
-main: TK_MAIN_OPEN newlines expressions newlines TK_MAIN_CLOSE
+main: TK_MAIN_OPEN expressions TK_MAIN_CLOSE
       {
-        $$ = Function{Name: "", Arguments: []string{}, Expressions: $3}
+        $$ = Function{Name: "", Arguments: []string{}, Expressions: $2}
       }
 
 expressions: expression
              {
                $$ = []Expression{$1}
              }
-           | expressions newlines expression
+           | expressions expression
              {
-               $1 = append($1, $3)
+               $1 = append($1, $2)
                $$ = $1
              }
 
@@ -64,9 +64,9 @@ expression: TK_PRINT value
             {
               $$ = Expression{$1, []Value{$2}}
             }
-          | TK_DECLARE Variable newlines TK_INITIALIZE Integer
+          | TK_DECLARE Variable TK_INITIALIZE Integer
             {
-              $$ = Expression{$1, []Value{VariableValue{$2}, IntegerValue{$5}}}
+              $$ = Expression{$1, []Value{VariableValue{$2}, IntegerValue{$4}}}
             }
 
 value: String
@@ -89,8 +89,3 @@ value: String
        {
          $$ = BoolValue{false}
        }
-
-newlines: '\n'
-        | '\r' '\n'
-        | newlines '\n'
-        | newlines '\r' '\n'

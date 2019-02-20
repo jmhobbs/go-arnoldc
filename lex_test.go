@@ -43,7 +43,12 @@ func TestLex(t *testing.T) {
 		{
 			name:        "Full Main Function",
 			source:      "IT'S SHOWTIME\nTALK TO THE HAND \"hello world\"\nYOU HAVE BEEN TERMINATED",
-			token_types: []int{TK_MAIN_OPEN, int('\n'), TK_PRINT, String, int('\n'), TK_MAIN_CLOSE},
+			token_types: []int{TK_MAIN_OPEN, TK_PRINT, String, TK_MAIN_CLOSE},
+		},
+		{
+			name:        "Ignore Multiple Newlines",
+			source:      "IT'S SHOWTIME\n\n\nTALK TO THE HAND \"hello world\"\n\n\nYOU HAVE BEEN TERMINATED",
+			token_types: []int{TK_MAIN_OPEN, TK_PRINT, String, TK_MAIN_CLOSE},
 		},
 		{
 			name:        "Declare Variable",

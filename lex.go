@@ -99,6 +99,9 @@ func (a *ArnoldC) scanInstruction(lval *yySymType) int {
 		default:
 			lval.str = strings.TrimSpace(buf.String())
 			if len(lval.str) == 0 {
+				if b == 0 {
+					return 0
+				}
 				continue
 			}
 			a.log("str = %q", lval.str)
@@ -129,7 +132,7 @@ func (a *ArnoldC) scanNormal(lval *yySymType) int {
 			a.line++
 			a.offset = 0
 			a.scannedInstruction = false
-			return int(b)
+			return a.scanInstruction(lval)
 		case unicode.IsSpace(rune(b)):
 			continue
 		case b == '"':
