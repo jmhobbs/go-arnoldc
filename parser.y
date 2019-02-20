@@ -7,18 +7,18 @@ func setProgram(l yyLexer, v Program) {
 %}
 
 %union{
-  str string 
-  integer int
-  value Value
-  statement Statement
-  statements []Statement
-  expression Expression
+  str         string
+  integer     int
+  value       Value
+  statement   Statement
+  statements  []Statement
+  expression  Expression
   expressions []Expression
-  block Block
-  blocks []Block
-  function Function
-  functions []Function
-  program Program
+  block       Block
+  blocks      []Block
+  function    Function
+  functions   []Function
+  program     Program
 }
 
 %token LexError
@@ -37,6 +37,7 @@ func setProgram(l yyLexer, v Program) {
 %token TK_IF TK_ELSE TK_END_IF
 %token TK_WHILE TK_END_WHILE
 
+%type <str> arithmetic_token
 %type <value> value number
 %type <statements> statements arithmetics
 %type <expression> expression arithmetic
@@ -98,7 +99,7 @@ block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND number arithmetics TK_ASSIGNMENT_
        }
 
 
-arithmetics: arithmetic
+arithmetics: arithmetic_token number
              {
                $$ = []Statement{$1}
              }
@@ -108,38 +109,19 @@ arithmetics: arithmetic
                $$ = $1
              }
 
-arithmetic: TK_ADD number
+arithmetic: arithmetic_token number
             {
               $$ = Expression{$1, []Value{$2}}
             }
-          | TK_SUBTRACT number
-            {
-              $$ = Expression{$1, []Value{$2}}
-            }
-          | TK_MULTIPLY number
-            {
-              $$ = Expression{$1, []Value{$2}}
-            }
-          | TK_DIVIDE number
-            {
-              $$ = Expression{$1, []Value{$2}}
-            }
-          | TK_EQUAL_TO number
-            {
-              $$ = Expression{$1, []Value{$2}}
-            }
-          | TK_GREATER_THAN number
-            {
-              $$ = Expression{$1, []Value{$2}}
-            }
-          | TK_OR number
-            {
-              $$ = Expression{$1, []Value{$2}}
-            }
-          | TK_AND number
-            {
-              $$ = Expression{$1, []Value{$2}}
-            }
+
+arithmetic_token: TK_SUBTRACT
+                | TK_ADD
+                | TK_MULTIPLY
+                | TK_DIVIDE
+                | TK_EQUAL_TO
+                | TK_GREATER_THAN
+                | TK_OR
+                | TK_AND
 
 number: Variable
          {
