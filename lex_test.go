@@ -55,6 +55,11 @@ func TestLex(t *testing.T) {
 			source:      "HEY CHRISTMAS TREE myVar",
 			token_types: []int{TK_DECLARE, Variable},
 		},
+		{
+			name:        "Bool Macro",
+			source:      "YOU SET US UP @I LIED",
+			token_types: []int{TK_INITIALIZE, TK_FALSE},
+		},
 	}
 
 	var (

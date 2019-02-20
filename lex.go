@@ -137,6 +137,8 @@ func (a *ArnoldC) scanNormal(lval *yySymType) int {
 			return a.scanInstruction(lval)
 		case unicode.IsSpace(rune(b)):
 			continue
+		case b == '@':
+			return a.scanMacro(lval)
 		case b == '"':
 			return a.scanString(lval)
 		case unicode.IsDigit(rune(b)):
@@ -186,6 +188,33 @@ func (a *ArnoldC) scanVariable(lval *yySymType) int {
 			lval.str = buf.String()
 			a.log("str = %q", lval.str)
 			return Variable
+		}
+	}
+
+	return 0
+}
+
+func (a *ArnoldC) scanMacro(lval *yySymType) int {
+	a.log("> scanMacro")
+	buf := bytes.NewBuffer(nil)
+	for b := a.next(); ; b = a.next() {
+		a.log("%q  %d", b, b)
+		switch {
+		case unicode.IsLetter(rune(b)) || b == ' ':
+			buf.WriteByte(b)
+		case b == '\n':
+			a.backup()
+			fallthrough
+		default:
+			lval.str = buf.String()
+			a.log("str = %q", lval.str)
+			tk, ok := macros[lval.str]
+			if !ok {
+				a.log("!! Unknown Macro \"@%s\"", lval.str)
+				// TODO: Store error.
+				return LexError
+			}
+			return tk
 		}
 	}
 

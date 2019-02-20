@@ -99,7 +99,7 @@ block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND number arithmetics TK_ASSIGNMENT_
        }
 
 
-arithmetics: arithmetic_token number
+arithmetics: arithmetic
              {
                $$ = []Statement{$1}
              }

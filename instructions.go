@@ -1,15 +1,24 @@
 package arnoldc
 
-// This is a map of valid instructions for ArnoldC to their token.
-var instructions map[string]int
+var (
+	// This is a map of valid instructions for ArnoldC to their token.
+	instructions map[string]int
+	// This is a map of valid "macros" for ArnoldC to their token.
+	macros map[string]int
+)
 
 func init() {
+	macros = map[string]int{
+		"NO PROBLEMO": TK_TRUE,
+		"I LIED":      TK_FALSE,
+	}
+
 	instructions = map[string]int{
 		// Functions
 		"IT'S SHOWTIME":            TK_MAIN_OPEN,
 		"YOU HAVE BEEN TERMINATED": TK_MAIN_CLOSE,
 
-		// Simple built in operations
+		// Simple built ins
 		"TALK TO THE HAND": TK_PRINT,
 
 		// Variable declaration

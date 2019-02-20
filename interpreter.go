@@ -5,6 +5,11 @@ import (
 	"io"
 )
 
+const (
+	TRUE  int = 1
+	FALSE int = 0
+)
+
 type interpreter struct {
 	variables map[string]Value
 }
@@ -29,7 +34,6 @@ func (i *interpreter) Run(program *Program, stdout, stderr io.Writer) error {
 				return fmt.Errorf("runtime error; unknown instruction %q", expression.Instruction)
 			}
 		} else {
-			// TODO: OH SHIT ITS A BLOCK BOYS
 			block := statement.(Block)
 
 			switch block.Instruction {
@@ -76,21 +80,22 @@ func (i *interpreter) resolveNumber(v Value) (int, error) {
 	}
 }
 
+// Executre and return an Assignment Block
 func (i *interpreter) assigmentBlock(block Block) error {
 	v := block.Args[0]
 
 	if v.Type() != VariableType {
-		return fmt.Errorf("runtime error; can not assign results to a non-variable")
+		return fmt.Errorf("can not assign results to a non-variable")
 	}
 
 	// TODO: Setup Instruction
 	statement := block.Statements[0]
 	if ExpressionType != statement.Type() {
-		return fmt.Errorf("runtime error; illegal block inside assignment")
+		return fmt.Errorf("illegal block inside assignment")
 	}
 	expression := statement.(Expression)
 	if expression.Instruction != "HERE IS MY INVITATION" {
-		return fmt.Errorf("runtime error; variable assignment must start with a first operand")
+		return fmt.Errorf("variable assignment must start with a first operand")
 	}
 
 	x, err := i.resolveNumber(expression.Args[0])
@@ -100,38 +105,52 @@ func (i *interpreter) assigmentBlock(block Block) error {
 
 	for _, statement := range block.Statements[1:] {
 		if ExpressionType != statement.Type() {
-			return fmt.Errorf("runtime error; illegal block inside assignment: %q", statement.(Block).Instruction)
+			return fmt.Errorf("illegal block inside assignment: %q", statement.(Block).Instruction)
 		}
 
 		expression := statement.(Expression)
 
+		// All of these should have exactly one argument.
+		arg, err := i.resolveNumber(expression.Args[0])
+		if err != nil {
+			return err
+		}
+
 		switch expression.Instruction {
 		case "GET UP":
-			arg, err := i.resolveNumber(expression.Args[0])
-			if err != nil {
-				return err
-			}
 			x = x + arg
 		case "GET DOWN":
-			arg, err := i.resolveNumber(expression.Args[0])
-			if err != nil {
-				return err
-			}
 			x = x - arg
 		case "YOU'RE FIRED":
-			arg, err := i.resolveNumber(expression.Args[0])
-			if err != nil {
-				return err
-			}
 			x = x * arg
 		case "HE HAD TO SPLIT":
-			arg, err := i.resolveNumber(expression.Args[0])
-			if err != nil {
-				return err
-			}
 			x = x / arg
+		case "YOU ARE NOT YOU YOU ARE ME":
+			if x == arg {
+				x = TRUE
+			} else {
+				x = FALSE
+			}
+		case "LET OFF SOME STEAM BENNET":
+			if x > arg {
+				x = TRUE
+			} else {
+				x = FALSE
+			}
+		case "CONSIDER THAT A DIVORCE":
+			if x != FALSE || arg != FALSE {
+				x = TRUE
+			} else {
+				x = FALSE
+			}
+		case "KNOCK KNOCK":
+			if x != FALSE && arg != FALSE {
+				x = TRUE
+			} else {
+				x = FALSE
+			}
 		default:
-			return fmt.Errorf("runtime error; illegal statement inside assignment: %q", expression.Instruction)
+			return fmt.Errorf("illegal statement inside assignment: %q", expression.Instruction)
 		}
 	}
 
