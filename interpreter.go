@@ -12,12 +12,20 @@ const (
 
 type interpreter struct {
 	variables map[string]Value
+	stdout    io.Writer
+	stderr    io.Writer
 }
 
 func (i *interpreter) Run(program *Program, stdout, stderr io.Writer) error {
 	i.variables = make(map[string]Value)
+	i.stdout = stdout
+	i.stderr = stderr
+	i.executeStatements(program.Main.Statements)
+	return nil
+}
 
-	for _, statement := range program.Main.Statements {
+func (i *interpreter) executeStatements(statements []Statement) error {
+	for _, statement := range statements {
 		if ExpressionType == statement.Type() {
 			expression := statement.(Expression)
 
@@ -27,7 +35,7 @@ func (i *interpreter) Run(program *Program, stdout, stderr io.Writer) error {
 				if err != nil {
 					return fmt.Errorf("runtime error; %v", err)
 				}
-				fmt.Fprintln(stdout, value)
+				fmt.Fprintln(i.stdout, value)
 			case "HEY CHRISTMAS TREE":
 				i.variables[expression.Args[0].Value().(string)] = expression.Args[1]
 			default:
@@ -38,8 +46,11 @@ func (i *interpreter) Run(program *Program, stdout, stderr io.Writer) error {
 
 			switch block.Instruction {
 			case "GET TO THE CHOPPER":
-				err := i.assigmentBlock(block)
-				if err != nil {
+				if err := i.assigmentBlock(block); err != nil {
+					return err
+				}
+			case "BECAUSE I'M GOING TO SAY PLEASE":
+				if err := i.ifElseBlock(block); err != nil {
 					return err
 				}
 			default:
@@ -80,7 +91,7 @@ func (i *interpreter) resolveNumber(v Value) (int, error) {
 	}
 }
 
-// Executre and return an Assignment Block
+// Execute and return an Assignment Block
 func (i *interpreter) assigmentBlock(block Block) error {
 	v := block.Args[0]
 
@@ -155,6 +166,23 @@ func (i *interpreter) assigmentBlock(block Block) error {
 	}
 
 	i.variables[v.Value().(string)] = IntegerValue{x}
+
+	return nil
+}
+
+func (i *interpreter) ifElseBlock(block Block) error {
+	v, err := i.resolveNumber(block.Args[0])
+	if err != nil {
+		return err
+	}
+
+	if v != FALSE {
+		ifBlock := block.Statements[0].(Block)
+		return i.executeStatements(ifBlock.Statements)
+	} else if len(block.Statements) > 1 {
+		elseBlock := block.Statements[1].(Block)
+		return i.executeStatements(elseBlock.Statements)
+	}
 
 	return nil
 }

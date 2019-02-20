@@ -24,6 +24,12 @@ IT'S SHOWTIME
 		GET UP 5
 		LET OFF SOME STEAM BENNET c
 	ENOUGH TALK
+
+	BECAUSE I'M GOING TO SAY PLEASE @I LIED
+		TALK TO THE HAND "false is true?!"
+	BULLSHIT
+		TALK TO THE HAND "false is not true"
+	YOU HAVE NO RESPECT FOR LOGIC
 YOU HAVE BEEN TERMINATED
 `
 
@@ -86,6 +92,33 @@ YOU HAVE BEEN TERMINATED
 						Expression{
 							Instruction: "LET OFF SOME STEAM BENNET",
 							Args:        []Value{VariableValue{"c"}},
+						},
+					},
+				},
+				// TODO: If & if/else should probably be a special type, since it's a compound block statement.
+				Block{
+					Instruction: "BECAUSE I'M GOING TO SAY PLEASE",
+					Args:        []Value{IntegerValue{0}},
+					Statements: []Statement{
+						Block{
+							Instruction: "__TRUE",
+							Args:        []Value{},
+							Statements: []Statement{
+								Expression{
+									Instruction: "TALK TO THE HAND",
+									Args:        []Value{StringValue{"false is true?!"}},
+								},
+							},
+						},
+						Block{
+							Instruction: "__FALSE",
+							Args:        []Value{},
+							Statements: []Statement{
+								Expression{
+									Instruction: "TALK TO THE HAND",
+									Args:        []Value{StringValue{"false is not true"}},
+								},
+							},
 						},
 					},
 				},
