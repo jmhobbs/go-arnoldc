@@ -65,10 +65,10 @@ func (a *ArnoldC) next() byte {
 
 	_, err := a.input.Read(b)
 	if err != nil {
-		// TODO: Set the error contents somewhere?
-		//if err != io.EOF {
-		//	return byte(0)
-		//}
+		if err == io.EOF {
+			a.log("!! EOF")
+		}
+		// TODO: Set the non-EOF error contents somewhere?
 		return 0
 	}
 

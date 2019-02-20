@@ -16,7 +16,7 @@ func (p Program) String() string {
 }
 
 func (p Program) Run(stdout, stderr io.Writer) error {
-	i := interpreter{}
+	i := &interpreter{}
 	return i.Run(&p, stdout, stderr)
 }
 
