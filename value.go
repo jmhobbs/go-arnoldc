@@ -10,7 +10,6 @@ const (
 	VariableType
 	StringType
 	IntegerType
-	BoolType
 )
 
 type Value interface {
@@ -41,16 +40,3 @@ type IntegerValue struct {
 func (v IntegerValue) Type() ValueType    { return IntegerType }
 func (v IntegerValue) String() string     { return fmt.Sprintf("Integer(%d)", v.v) }
 func (v IntegerValue) Value() interface{} { return v.v }
-
-type BoolValue struct {
-	b bool
-}
-
-func (v BoolValue) Type() ValueType { return BoolType }
-func (v BoolValue) String() string {
-	if v.b {
-		return "TRUE"
-	}
-	return "FALSE"
-}
-func (v BoolValue) Value() interface{} { return v.b }

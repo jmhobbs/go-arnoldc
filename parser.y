@@ -12,7 +12,7 @@ func setProgram(l yyLexer, v Program) {
   value Value
   statement Statement
   statements []Statement
-  expression Expression 
+  expression Expression
   expressions []Expression
   block Block
   blocks []Block
@@ -33,6 +33,7 @@ func setProgram(l yyLexer, v Program) {
 %token TK_DECLARE TK_INITIALIZE
 %token TK_ASSIGNMENT TK_FIRST_OPERAND TK_ASSIGNMENT_END
 %token TK_ADD TK_SUBTRACT TK_MULTIPLY TK_DIVIDE
+%token TK_EQUAL_TO TK_GREATER_THAN TK_OR TK_AND
 %token TK_IF TK_ELSE TK_END_IF
 %token TK_WHILE TK_END_WHILE
 
@@ -43,7 +44,11 @@ func setProgram(l yyLexer, v Program) {
 %type <function> main
 %type <program> program
 
-%type <str> TK_PRINT TK_DECLARE TK_INITIALIZE TK_ASSIGNMENT TK_ADD TK_SUBTRACT TK_MULTIPLY TK_DIVIDE TK_FIRST_OPERAND
+%type <str> TK_PRINT
+%type <str> TK_DECLARE TK_INITIALIZE
+%type <str> TK_ASSIGNMENT TK_FIRST_OPERAND
+%type <str> TK_ADD TK_SUBTRACT TK_MULTIPLY TK_DIVIDE
+%type <str> TK_EQUAL_TO TK_GREATER_THAN TK_OR TK_AND
 
 %start program
 
@@ -87,9 +92,9 @@ expression: TK_PRINT value
               $$ = Expression{$1, []Value{VariableValue{$2}, IntegerValue{$4}}}
             }
 
-block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND Integer arithmetics TK_ASSIGNMENT_END
+block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND number arithmetics TK_ASSIGNMENT_END
        {
-         $$ = Block{$1, []Value{VariableValue{$2}}, append([]Statement{Expression{$3, []Value{IntegerValue{$4}}}}, $5...)}
+         $$ = Block{$1, []Value{VariableValue{$2}}, append([]Statement{Expression{$3, []Value{$4}}}, $5...)}
        }
 
 
@@ -116,6 +121,22 @@ arithmetic: TK_ADD number
               $$ = Expression{$1, []Value{$2}}
             }
           | TK_DIVIDE number
+            {
+              $$ = Expression{$1, []Value{$2}}
+            }
+          | TK_EQUAL_TO number
+            {
+              $$ = Expression{$1, []Value{$2}}
+            }
+          | TK_GREATER_THAN number
+            {
+              $$ = Expression{$1, []Value{$2}}
+            }
+          | TK_OR number
+            {
+              $$ = Expression{$1, []Value{$2}}
+            }
+          | TK_AND number
             {
               $$ = Expression{$1, []Value{$2}}
             }
