@@ -8,6 +8,7 @@ func setProgram(l yyLexer, v Program) {
 
 %union{
   str         string
+  strs        []string
   integer     int
   value       Value
   statement   Statement
@@ -28,6 +29,7 @@ func setProgram(l yyLexer, v Program) {
 %token <integer> Integer
 
 %token TK_MAIN_OPEN TK_MAIN_CLOSE
+%token TK_METHOD_OPEN TK_METHOD_CLOSE TK_DECLARE_PARAMETER TK_END_PARAMETER_DECLARATION
 %token TK_PRINT
 %token TK_TRUE TK_FALSE
 %token TK_DECLARE TK_INITIALIZE
@@ -38,11 +40,13 @@ func setProgram(l yyLexer, v Program) {
 %token TK_WHILE TK_END_WHILE
 
 %type <str> arithmetic_token
+%type <strs> parameters
 %type <value> value number
 %type <statements> statements arithmetics
 %type <expression> expression arithmetic
 %type <block> block
-%type <function> main
+%type <function> main method
+%type <functions> methods
 %type <program> program
 
 %type <str> TK_PRINT
@@ -61,11 +65,44 @@ program: main
          {
            setProgram(yylex, Program{Main: $1})
          }
+       | main methods
+         {
+           setProgram(yylex, Program{Main: $1, Methods: $2})
+         }
 
 main: TK_MAIN_OPEN statements TK_MAIN_CLOSE
       {
         $$ = Function{Name: "", Arguments: []string{}, Statements: $2}
       }
+
+methods: method
+         {
+           $$ = []Function{$1}
+         }
+       | methods method
+         {
+           $1 = append($1, $2)
+           $$ = $1
+         }
+
+method: TK_METHOD_OPEN Variable statements TK_METHOD_CLOSE
+        {
+          $$ = Function{$2, []string{}, $3}
+        }
+      | TK_METHOD_OPEN Variable parameters TK_END_PARAMETER_DECLARATION statements TK_METHOD_CLOSE
+        {
+          $$ = Function{$2, $3, $5}
+        }
+
+parameters: TK_DECLARE_PARAMETER Variable
+            {
+              $$ = []string{$2}
+            }
+          | parameters TK_DECLARE_PARAMETER Variable 
+            {
+              $1 = append($1, $3)
+              $$ = $1
+            }
 
 statements: expression
              {

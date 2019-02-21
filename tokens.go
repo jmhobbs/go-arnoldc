@@ -15,8 +15,12 @@ func init() {
 
 	instructions = map[string]int{
 		// Functions
-		"IT'S SHOWTIME":            TK_MAIN_OPEN,
-		"YOU HAVE BEEN TERMINATED": TK_MAIN_CLOSE,
+		"IT'S SHOWTIME":                                      TK_MAIN_OPEN,
+		"YOU HAVE BEEN TERMINATED":                           TK_MAIN_CLOSE,
+		"LISTEN TO ME VERY CAREFULLY":                        TK_METHOD_OPEN,
+		"HASTA LA VISTA, BABY":                               TK_METHOD_CLOSE,
+		"I NEED YOUR CLOTHES YOUR BOOTS AND YOUR MOTORCYCLE": TK_DECLARE_PARAMETER,
+		"GIVE THESE PEOPLE AIR":                              TK_END_PARAMETER_DECLARATION,
 
 		// Simple built ins
 		"TALK TO THE HAND": TK_PRINT,

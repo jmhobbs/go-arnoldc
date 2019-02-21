@@ -46,13 +46,23 @@ func TestLex(t *testing.T) {
 			token_types: []int{TK_MAIN_CLOSE},
 		},
 		{
-			name:        "Full Main Function",
-			source:      "IT'S SHOWTIME\nTALK TO THE HAND \"hello world\"\nYOU HAVE BEEN TERMINATED",
+			name: "Full Main Function",
+			source: `
+IT'S SHOWTIME
+TALK TO THE HAND "hello world"
+YOU HAVE BEEN TERMINATED`,
 			token_types: []int{TK_MAIN_OPEN, TK_PRINT, String, TK_MAIN_CLOSE},
 		},
 		{
-			name:        "Ignore Multiple Newlines",
-			source:      "IT'S SHOWTIME\n\n\nTALK TO THE HAND \"hello world\"\n\n\nYOU HAVE BEEN TERMINATED",
+			name: "Ignore Multiple Newlines",
+			source: `
+IT'S SHOWTIME
+
+
+TALK TO THE HAND "hello world"
+
+
+YOU HAVE BEEN TERMINATED`,
 			token_types: []int{TK_MAIN_OPEN, TK_PRINT, String, TK_MAIN_CLOSE},
 		},
 		{
@@ -64,6 +74,25 @@ func TestLex(t *testing.T) {
 			name:        "Bool Macro",
 			source:      "YOU SET US UP @I LIED",
 			token_types: []int{TK_INITIALIZE, TK_FALSE},
+		},
+		{
+			name: "Void Method",
+			source: `
+LISTEN TO ME VERY CAREFULLY methodName
+TALK TO THE HAND "hello world"
+HASTA LA VISTA, BABY`,
+			// TODO: Using "Variable" for the method name and args is...not great.
+			token_types: []int{TK_METHOD_OPEN, Variable, TK_PRINT, String, TK_METHOD_CLOSE},
+		},
+		{
+			name: "Parameterized Method",
+			source: `
+LISTEN TO ME VERY CAREFULLY methodName
+I NEED YOUR CLOTHES YOUR BOOTS AND YOUR MOTORCYCLE arg1
+GIVE THESE PEOPLE AIR
+TALK TO THE HAND "hello world"
+HASTA LA VISTA, BABY`,
+			token_types: []int{TK_METHOD_OPEN, Variable, TK_DECLARE_PARAMETER, Variable, TK_END_PARAMETER_DECLARATION, TK_PRINT, String, TK_METHOD_CLOSE},
 		},
 	}
 
@@ -142,6 +171,10 @@ func tokenTypeToString(typ int) string {
 		return "main() Open"
 	case TK_MAIN_CLOSE:
 		return "main() Close"
+	case TK_METHOD_OPEN:
+		return "method() Open"
+	case TK_METHOD_CLOSE:
+		return "method() Close"
 	case TK_PRINT:
 		return "print()"
 	}
