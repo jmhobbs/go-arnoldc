@@ -27,8 +27,7 @@ func New(stdout, stderr io.Writer) *Interpreter {
 }
 
 func (i *Interpreter) Run(program *arnoldc.Program) error {
-	i.executeStatements(program.Main.Statements)
-	return nil
+	return i.executeStatements(program.Main.Statements)
 }
 
 func (i *Interpreter) executeStatements(statements []arnoldc.Statement) error {
@@ -58,6 +57,10 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement) error {
 				}
 			case "BECAUSE I'M GOING TO SAY PLEASE":
 				if err := i.ifElseBlock(block); err != nil {
+					return err
+				}
+			case "STICK AROUND":
+				if err := i.whileBlock(block); err != nil {
 					return err
 				}
 			default:
@@ -189,6 +192,26 @@ func (i *Interpreter) ifElseBlock(block arnoldc.Block) error {
 	} else if len(block.Statements) > 1 {
 		elseBlock := block.Statements[1].(arnoldc.Block)
 		return i.executeStatements(elseBlock.Statements)
+	}
+
+	return nil
+}
+
+func (i *Interpreter) whileBlock(block arnoldc.Block) error {
+	for {
+		v, err := i.resolveNumber(block.Args[0])
+		if err != nil {
+			return err
+		}
+		if v == FALSE {
+			break
+		}
+
+		err = i.executeStatements(block.Statements)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

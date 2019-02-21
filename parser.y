@@ -51,6 +51,7 @@ func setProgram(l yyLexer, v Program) {
 %type <str> TK_ADD TK_SUBTRACT TK_MULTIPLY TK_DIVIDE
 %type <str> TK_EQUAL_TO TK_GREATER_THAN TK_OR TK_AND
 %type <str> TK_IF TK_ELSE TK_END_IF
+%type <str> TK_WHILE TK_END_WHILE
 
 %start program
 
@@ -89,9 +90,9 @@ expression: TK_PRINT value
             {
               $$ = Expression{$1, []Value{$2}}
             }
-          | TK_DECLARE Variable TK_INITIALIZE Integer
+          | TK_DECLARE Variable TK_INITIALIZE number
             {
-              $$ = Expression{$1, []Value{VariableValue{$2}, IntegerValue{$4}}}
+              $$ = Expression{$1, []Value{VariableValue{$2}, $4}}
             }
 
 block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND number arithmetics TK_ASSIGNMENT_END
@@ -105,6 +106,10 @@ block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND number arithmetics TK_ASSIGNMENT_
      | TK_IF number statements TK_ELSE statements TK_END_IF
        {
          $$ = Block{$1, []Value{$2}, []Statement{Block{"__TRUE", []Value{}, $3}, Block{"__FALSE", []Value{}, $5}}}
+       }
+     | TK_WHILE number statements TK_END_WHILE
+       {
+         $$ = Block{$1, []Value{$2}, $3}
        }
 
 

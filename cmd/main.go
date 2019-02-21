@@ -28,8 +28,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	i := runtime.New(os.Stdout, os.Stderr)
-	err = i.Run(program)
+	err = runtime.New(os.Stdout, os.Stderr).Run(program)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
 		os.Exit(1)
