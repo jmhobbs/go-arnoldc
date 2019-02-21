@@ -95,7 +95,7 @@ func (a *ArnoldC) scanInstruction(lval *yySymType) int {
 	for b := a.next(); ; b = a.next() {
 		a.log("%q  %d", b, b)
 		switch {
-		case (unicode.IsUpper(rune(b)) || b == '\'' || unicode.IsSpace(rune(b))) && b != '\n':
+		case (unicode.IsUpper(rune(b)) || b == '\'' || b == ',' || unicode.IsSpace(rune(b))) && b != '\n':
 			buf.WriteByte(b)
 		default:
 			lval.str = strings.TrimSpace(buf.String())
