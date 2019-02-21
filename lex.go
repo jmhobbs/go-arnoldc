@@ -10,7 +10,7 @@ import (
 	"unicode"
 )
 
-//go:generate goyacc -l -o parser.go parser.y
+//go:generate goyacc -c -cr -o parser.go parser.y
 
 type ArnoldC struct {
 	input   io.ReadSeeker
