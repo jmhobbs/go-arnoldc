@@ -179,7 +179,7 @@ func (a *ArnoldC) scanVariable(lval *yySymType) int {
 	for b := a.next(); ; b = a.next() {
 		a.log("%q  %d", b, b)
 		switch {
-		case unicode.IsLetter(rune(b)):
+		case unicode.IsLetter(rune(b)) || unicode.IsDigit(rune(b)):
 			buf.WriteByte(b)
 		case b == '\n':
 			a.backup()

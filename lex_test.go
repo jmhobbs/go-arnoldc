@@ -36,6 +36,11 @@ func TestLex(t *testing.T) {
 			token_types: []int{TK_PRINT, Variable},
 		},
 		{
+			name:        "Variable with number",
+			source:      `TALK TO THE HAND myVar10`,
+			token_types: []int{TK_PRINT, Variable},
+		},
+		{
 			name:        "Main Close",
 			source:      `YOU HAVE BEEN TERMINATED`,
 			token_types: []int{TK_MAIN_CLOSE},
