@@ -29,9 +29,10 @@ type VariableValue struct {
 	name string
 }
 
-func (v VariableValue) Type() ValueType    { return VariableType }
-func (v VariableValue) String() string     { return fmt.Sprintf("Variable(%q)", v.name) }
-func (v VariableValue) Value() interface{} { return v.name }
+func (v VariableValue) Type() ValueType          { return VariableType }
+func (v VariableValue) String() string           { return fmt.Sprintf("Variable(%q)", v.name) }
+func (v VariableValue) Value() interface{}       { return v.name }
+func NewVariableValue(name string) VariableValue { return VariableValue{name} }
 
 type IntegerValue struct {
 	v int

@@ -21,6 +21,9 @@ func init() {
 		"HASTA LA VISTA, BABY":                               TK_METHOD_CLOSE,
 		"I NEED YOUR CLOTHES YOUR BOOTS AND YOUR MOTORCYCLE": TK_DECLARE_PARAMETER,
 		"GIVE THESE PEOPLE AIR":                              TK_END_PARAMETER_DECLARATION,
+		"I'LL BE BACK":                                       TK_RETURN,
+		"DO IT NOW":                                          TK_CALL_METHOD,
+		"GET YOUR ASS TO MARS":                               TK_ASSIGN_FROM_CALL,
 
 		// Simple built ins
 		"TALK TO THE HAND": TK_PRINT,

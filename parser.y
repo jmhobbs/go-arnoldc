@@ -11,6 +11,7 @@ func setProgram(l yyLexer, v Program) {
   strs        []string
   integer     int
   value       Value
+  values      []Value
   statement   Statement
   statements  []Statement
   expression  Expression
@@ -29,7 +30,8 @@ func setProgram(l yyLexer, v Program) {
 %token <integer> Integer
 
 %token TK_MAIN_OPEN TK_MAIN_CLOSE
-%token TK_METHOD_OPEN TK_METHOD_CLOSE TK_DECLARE_PARAMETER TK_END_PARAMETER_DECLARATION
+%token TK_METHOD_OPEN TK_METHOD_CLOSE TK_DECLARE_PARAMETER TK_END_PARAMETER_DECLARATION TK_RETURN
+%token TK_CALL_METHOD TK_ASSIGN_FROM_CALL
 %token TK_PRINT
 %token TK_TRUE TK_FALSE
 %token TK_DECLARE TK_INITIALIZE
@@ -42,8 +44,9 @@ func setProgram(l yyLexer, v Program) {
 %type <str> arithmetic_token
 %type <strs> parameters
 %type <value> value number
+%type <values> values
 %type <statements> statements arithmetics
-%type <expression> expression arithmetic
+%type <expression> expression arithmetic invoke
 %type <block> block
 %type <function> main method
 %type <functions> methods
@@ -56,6 +59,8 @@ func setProgram(l yyLexer, v Program) {
 %type <str> TK_EQUAL_TO TK_GREATER_THAN TK_OR TK_AND
 %type <str> TK_IF TK_ELSE TK_END_IF
 %type <str> TK_WHILE TK_END_WHILE
+%type <str> TK_CALL_METHOD TK_ASSIGN_FROM_CALL
+%type <str> TK_RETURN
 
 %start program
 
@@ -89,8 +94,18 @@ method: TK_METHOD_OPEN Variable statements TK_METHOD_CLOSE
         {
           $$ = Function{$2, []string{}, $3}
         }
+      | TK_METHOD_OPEN Variable statements TK_RETURN value TK_METHOD_CLOSE
+        {
+          $3 = append($3, Expression{$4, []Value{$5}})
+          $$ = Function{$2, []string{}, $3}
+        }
       | TK_METHOD_OPEN Variable parameters TK_END_PARAMETER_DECLARATION statements TK_METHOD_CLOSE
         {
+          $$ = Function{$2, $3, $5}
+        }
+      | TK_METHOD_OPEN Variable parameters TK_END_PARAMETER_DECLARATION statements TK_RETURN value TK_METHOD_CLOSE
+        {
+          $5 = append($5, Expression{$6, []Value{$7}})
           $$ = Function{$2, $3, $5}
         }
 
@@ -131,6 +146,26 @@ expression: TK_PRINT value
             {
               $$ = Expression{$1, []Value{VariableValue{$2}, $4}}
             }
+          | invoke
+
+invoke: TK_CALL_METHOD Variable
+        {
+          $$ = Expression{$1, []Value{VariableValue{$2}}}
+        }
+      | TK_CALL_METHOD Variable values
+        {
+          $3 = append([]Value{VariableValue{$2}}, $3...)
+          $$ = Expression{$1, $3}
+        }
+      | TK_ASSIGN_FROM_CALL Variable TK_CALL_METHOD Variable
+        {
+          $$ = Expression{$1, []Value{VariableValue{$2}, VariableValue{$4}}}
+        }
+      | TK_ASSIGN_FROM_CALL Variable TK_CALL_METHOD Variable values
+        {
+          $5 = append([]Value{VariableValue{$2}, VariableValue{$4}}, $5...)
+          $$ = Expression{$1, $5}
+        }
 
 block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND number arithmetics TK_ASSIGNMENT_END
        {
@@ -190,6 +225,16 @@ number: Variable
          {
            $$ = IntegerValue{0}
          }
+
+values: value
+        {
+          $$ = []Value{$1}
+        }
+      | values value
+        {
+          $1 = append($1, $2)
+          $$ = $1
+        }
 
 value: String
        {

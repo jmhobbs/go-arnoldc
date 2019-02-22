@@ -31,6 +31,22 @@ IT'S SHOWTIME
 		TALK TO THE HAND "false is not true"
 	YOU HAVE NO RESPECT FOR LOGIC
 YOU HAVE BEEN TERMINATED
+
+LISTEN TO ME VERY CAREFULLY hello
+	TALK TO THE HAND "hello"
+HASTA LA VISTA, BABY
+
+LISTEN TO ME VERY CAREFULLY double
+	I NEED YOUR CLOTHES YOUR BOOTS AND YOUR MOTORCYCLE number
+	GIVE THESE PEOPLE AIR
+
+	GET TO THE CHOPPER result
+		HERE IS MY INVITATION double
+		YOU'RE FIRED 2
+	ENOUGH TALK
+
+	I'LL BE BACK result
+HASTA LA VISTA, BABY
 `
 
 	f, err := fileFromString(src)
@@ -120,6 +136,42 @@ YOU HAVE BEEN TERMINATED
 								},
 							},
 						},
+					},
+				},
+			},
+		},
+		Methods: []Function{
+			Function{
+				Name:      "hello",
+				Arguments: []string{},
+				Statements: []Statement{
+					Expression{
+						Instruction: "TALK TO THE HAND",
+						Args:        []Value{StringValue{"hello"}},
+					},
+				},
+			},
+			Function{
+				Name:      "double",
+				Arguments: []string{"number"},
+				Statements: []Statement{
+					Block{
+						Instruction: "GET TO THE CHOPPER",
+						Args:        []Value{VariableValue{"result"}},
+						Statements: []Statement{
+							Expression{
+								Instruction: "HERE IS MY INVITATION",
+								Args:        []Value{VariableValue{"double"}},
+							},
+							Expression{
+								Instruction: "YOU'RE FIRED",
+								Args:        []Value{IntegerValue{2}},
+							},
+						},
+					},
+					Expression{
+						Instruction: "I'LL BE BACK",
+						Args:        []Value{VariableValue{"result"}},
 					},
 				},
 			},

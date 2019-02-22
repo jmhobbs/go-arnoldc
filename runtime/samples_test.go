@@ -38,6 +38,10 @@ func TestSamples(t *testing.T) {
 			"count_to_ten.arnoldc",
 			"1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n",
 		},
+		{
+			"hello_functions.arnoldc",
+			"hello world\n10\n",
+		},
 	}
 
 	for _, sample := range samples {
