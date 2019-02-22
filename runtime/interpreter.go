@@ -27,17 +27,17 @@ func New(stdout, stderr io.Writer) *Interpreter {
 
 func (i *Interpreter) Run(program *arnoldc.Program) error {
 	i.program = program
-	_, err := i.invokeFunction(&program.Main, []arnoldc.Value{}, nil)
+	_, err := i.invokeMethod(&program.Main, []arnoldc.Value{}, nil)
 	return err
 }
 
-func (i *Interpreter) invokeFunction(f *arnoldc.Function, arguments []arnoldc.Value, parentScope *scope) (int, error) {
-	if len(arguments) != len(f.Arguments) {
+func (i *Interpreter) invokeMethod(f *arnoldc.Method, arguments []arnoldc.Value, parentScope *scope) (int, error) {
+	if len(arguments) != len(f.Parameters) {
 		return 0, fmt.Errorf("incorrect number of arguments for %q", f.Name)
 	}
 
 	vars := newScope(parentScope)
-	for i, name := range f.Arguments {
+	for i, name := range f.Parameters {
 		v, err := parentScope.Get(arguments[i])
 		if err != nil {
 			return 0, fmt.Errorf("invalid argument; %v", arguments[i])
@@ -54,37 +54,37 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *sc
 			expression := statement.(arnoldc.Expression)
 
 			switch expression.Instruction {
-			case "TALK TO THE HAND":
+			case arnoldc.PRINT:
 				value, err := vars.resolveValue(expression.Args[0])
 				if err != nil {
 					return 0, fmt.Errorf("runtime error; %v", err)
 				}
 				fmt.Fprintln(i.stdout, value)
-			case "HEY CHRISTMAS TREE":
+			case arnoldc.DECLARE:
 				vars.Set(expression.Args[0].Value().(string), expression.Args[1].Value().(int))
-			case "GET YOUR ASS TO MARS":
+			case arnoldc.ASSIGN_FROM_CALL:
 				returnName := expression.Args[0].Value().(string)
 				methodName := expression.Args[1].Value().(string)
 				function, ok := i.method(methodName)
 				if !ok {
 					return 0, fmt.Errorf("unknown method; %q", methodName)
 				}
-				ret, err := i.invokeFunction(function, expression.Args[2:], newScope(vars))
+				ret, err := i.invokeMethod(function, expression.Args[2:], newScope(vars))
 				if err != nil {
 					return 0, fmt.Errorf("runtime err; %v", err)
 				}
 				vars.Set(returnName, ret)
-			case "DO IT NOW":
+			case arnoldc.CALL_METHOD:
 				methodName := expression.Args[0].Value().(string)
 				function, ok := i.method(methodName)
 				if !ok {
 					return 0, fmt.Errorf("unknown method; %q", methodName)
 				}
-				_, err := i.invokeFunction(function, expression.Args[1:], newScope(vars))
+				_, err := i.invokeMethod(function, expression.Args[1:], newScope(vars))
 				if err != nil {
 					return 0, fmt.Errorf("runtime error; %v", err)
 				}
-			case "I'LL BE BACK":
+			case arnoldc.RETURN:
 				v, err := vars.Get(expression.Args[0])
 				if err != nil {
 					return 0, fmt.Errorf("invalid return value; %v", err)
@@ -97,15 +97,15 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *sc
 			block := statement.(arnoldc.Block)
 
 			switch block.Instruction {
-			case "GET TO THE CHOPPER":
+			case arnoldc.ASSIGNMENT:
 				if _, err := i.assigmentBlock(block, vars); err != nil {
 					return 0, err
 				}
-			case "BECAUSE I'M GOING TO SAY PLEASE":
+			case arnoldc.IF:
 				if _, err := i.ifElseBlock(block, vars); err != nil {
 					return 0, err
 				}
-			case "STICK AROUND":
+			case arnoldc.WHILE:
 				if _, err := i.whileBlock(block, vars); err != nil {
 					return 0, err
 				}
@@ -133,7 +133,7 @@ func (i *Interpreter) assigmentBlock(block arnoldc.Block, parentScope *scope) (i
 		return 0, fmt.Errorf("illegal block inside assignment")
 	}
 	expression := statement.(arnoldc.Expression)
-	if expression.Instruction != "HERE IS MY INVITATION" {
+	if expression.Instruction != arnoldc.FIRST_OPERAND {
 		return 0, fmt.Errorf("variable assignment must start with a first operand")
 	}
 
@@ -156,33 +156,33 @@ func (i *Interpreter) assigmentBlock(block arnoldc.Block, parentScope *scope) (i
 		}
 
 		switch expression.Instruction {
-		case "GET UP":
+		case arnoldc.ADD:
 			x = x + arg
-		case "GET DOWN":
+		case arnoldc.SUBTRACT:
 			x = x - arg
-		case "YOU'RE FIRED":
+		case arnoldc.MULTIPLY:
 			x = x * arg
-		case "HE HAD TO SPLIT":
+		case arnoldc.DIVIDE:
 			x = x / arg
-		case "YOU ARE NOT YOU YOU ARE ME":
+		case arnoldc.EQUAL_TO:
 			if x == arg {
 				x = TRUE
 			} else {
 				x = FALSE
 			}
-		case "LET OFF SOME STEAM BENNET":
+		case arnoldc.GREATER_THAN:
 			if x > arg {
 				x = TRUE
 			} else {
 				x = FALSE
 			}
-		case "CONSIDER THAT A DIVORCE":
+		case arnoldc.OR:
 			if x != FALSE || arg != FALSE {
 				x = TRUE
 			} else {
 				x = FALSE
 			}
-		case "KNOCK KNOCK":
+		case arnoldc.AND:
 			if x != FALSE && arg != FALSE {
 				x = TRUE
 			} else {
@@ -237,7 +237,7 @@ func (i *Interpreter) whileBlock(block arnoldc.Block, parentScope *scope) (int, 
 	return 0, nil
 }
 
-func (i *Interpreter) method(name string) (*arnoldc.Function, bool) {
+func (i *Interpreter) method(name string) (*arnoldc.Method, bool) {
 	for _, f := range i.program.Methods {
 		if f.Name == name {
 			return &f, true

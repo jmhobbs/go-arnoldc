@@ -65,73 +65,73 @@ HASTA LA VISTA, BABY
 	}
 
 	expect := Program{
-		Main: Function{
+		Main: Method{
 			Statements: []Statement{
 				Expression{
-					Instruction: "HEY CHRISTMAS TREE",
+					Instruction: DECLARE,
 					Args:        []Value{VariableValue{"myVar"}, IntegerValue{10}},
 				},
 				Expression{
-					Instruction: "TALK TO THE HAND",
+					Instruction: PRINT,
 					Args:        []Value{StringValue{"hello world"}},
 				},
 				Block{
-					Instruction: "GET TO THE CHOPPER",
+					Instruction: ASSIGNMENT,
 					Args:        []Value{VariableValue{"a"}},
 					Statements: []Statement{
 						Expression{
-							Instruction: "HERE IS MY INVITATION",
+							Instruction: FIRST_OPERAND,
 							Args:        []Value{IntegerValue{4}},
 						},
 						Expression{
-							Instruction: "GET UP",
+							Instruction: ADD,
 							Args:        []Value{VariableValue{"b"}},
 						},
 						Expression{
-							Instruction: "YOU'RE FIRED",
+							Instruction: MULTIPLY,
 							Args:        []Value{IntegerValue{2}},
 						},
 					},
 				},
 				Block{
-					Instruction: "GET TO THE CHOPPER",
+					Instruction: ASSIGNMENT,
 					Args:        []Value{VariableValue{"a"}},
 					Statements: []Statement{
 						Expression{
-							Instruction: "HERE IS MY INVITATION",
+							Instruction: FIRST_OPERAND,
 							Args:        []Value{VariableValue{"b"}},
 						},
 						Expression{
-							Instruction: "GET UP",
+							Instruction: ADD,
 							Args:        []Value{IntegerValue{5}},
 						},
 						Expression{
-							Instruction: "LET OFF SOME STEAM BENNET",
+							Instruction: GREATER_THAN,
 							Args:        []Value{VariableValue{"c"}},
 						},
 					},
 				},
 				// TODO: If & if/else should probably be a special type, since it's a compound block statement.
 				Block{
-					Instruction: "BECAUSE I'M GOING TO SAY PLEASE",
+					Instruction: IF,
 					Args:        []Value{IntegerValue{0}},
 					Statements: []Statement{
 						Block{
-							Instruction: "__TRUE",
+							Instruction: IF_TRUE,
 							Args:        []Value{},
 							Statements: []Statement{
 								Expression{
-									Instruction: "TALK TO THE HAND",
+									Instruction: PRINT,
 									Args:        []Value{StringValue{"false is true?!"}},
 								},
 							},
 						},
 						Block{
-							Instruction: "__FALSE",
+							Instruction: IF_FALSE,
 							Args:        []Value{},
 							Statements: []Statement{
 								Expression{
-									Instruction: "TALK TO THE HAND",
+									Instruction: PRINT,
 									Args:        []Value{StringValue{"false is not true"}},
 								},
 							},
@@ -140,37 +140,36 @@ HASTA LA VISTA, BABY
 				},
 			},
 		},
-		Methods: []Function{
-			Function{
-				Name:      "hello",
-				Arguments: []string{},
+		Methods: []Method{
+			Method{
+				Name: "hello",
 				Statements: []Statement{
 					Expression{
-						Instruction: "TALK TO THE HAND",
+						Instruction: PRINT,
 						Args:        []Value{StringValue{"hello"}},
 					},
 				},
 			},
-			Function{
-				Name:      "double",
-				Arguments: []string{"number"},
+			Method{
+				Name:       "double",
+				Parameters: []string{"number"},
 				Statements: []Statement{
 					Block{
-						Instruction: "GET TO THE CHOPPER",
+						Instruction: ASSIGNMENT,
 						Args:        []Value{VariableValue{"result"}},
 						Statements: []Statement{
 							Expression{
-								Instruction: "HERE IS MY INVITATION",
+								Instruction: FIRST_OPERAND,
 								Args:        []Value{VariableValue{"double"}},
 							},
 							Expression{
-								Instruction: "YOU'RE FIRED",
+								Instruction: MULTIPLY,
 								Args:        []Value{IntegerValue{2}},
 							},
 						},
 					},
 					Expression{
-						Instruction: "I'LL BE BACK",
+						Instruction: RETURN,
 						Args:        []Value{VariableValue{"result"}},
 					},
 				},

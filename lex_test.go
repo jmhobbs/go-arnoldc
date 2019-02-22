@@ -23,27 +23,27 @@ func TestLex(t *testing.T) {
 		{
 			name:        "Main Open",
 			source:      `IT'S SHOWTIME`,
-			token_types: []int{TK_MAIN_OPEN},
+			token_types: []int{MAIN_OPEN},
 		},
 		{
 			name:        "Print String",
 			source:      `TALK TO THE HAND "hello world"`,
-			token_types: []int{TK_PRINT, String},
+			token_types: []int{PRINT, String},
 		},
 		{
 			name:        "Print Variable",
 			source:      `TALK TO THE HAND myVar`,
-			token_types: []int{TK_PRINT, Variable},
+			token_types: []int{PRINT, Variable},
 		},
 		{
 			name:        "Variable with number",
 			source:      `TALK TO THE HAND myVar10`,
-			token_types: []int{TK_PRINT, Variable},
+			token_types: []int{PRINT, Variable},
 		},
 		{
 			name:        "Main Close",
 			source:      `YOU HAVE BEEN TERMINATED`,
-			token_types: []int{TK_MAIN_CLOSE},
+			token_types: []int{MAIN_CLOSE},
 		},
 		{
 			name: "Full Main Function",
@@ -51,7 +51,7 @@ func TestLex(t *testing.T) {
 IT'S SHOWTIME
 TALK TO THE HAND "hello world"
 YOU HAVE BEEN TERMINATED`,
-			token_types: []int{TK_MAIN_OPEN, TK_PRINT, String, TK_MAIN_CLOSE},
+			token_types: []int{MAIN_OPEN, PRINT, String, MAIN_CLOSE},
 		},
 		{
 			name: "Ignore Multiple Newlines",
@@ -63,17 +63,17 @@ TALK TO THE HAND "hello world"
 
 
 YOU HAVE BEEN TERMINATED`,
-			token_types: []int{TK_MAIN_OPEN, TK_PRINT, String, TK_MAIN_CLOSE},
+			token_types: []int{MAIN_OPEN, PRINT, String, MAIN_CLOSE},
 		},
 		{
 			name:        "Declare Variable",
 			source:      "HEY CHRISTMAS TREE myVar",
-			token_types: []int{TK_DECLARE, Variable},
+			token_types: []int{DECLARE, Variable},
 		},
 		{
 			name:        "Bool Macro",
 			source:      "YOU SET US UP @I LIED",
-			token_types: []int{TK_INITIALIZE, TK_FALSE},
+			token_types: []int{INITIALIZE, FALSE},
 		},
 		{
 			name: "Void Method",
@@ -82,7 +82,7 @@ LISTEN TO ME VERY CAREFULLY methodName
 TALK TO THE HAND "hello world"
 HASTA LA VISTA, BABY`,
 			// TODO: Using "Variable" for the method name and args is...not great.
-			token_types: []int{TK_METHOD_OPEN, Variable, TK_PRINT, String, TK_METHOD_CLOSE},
+			token_types: []int{METHOD_OPEN, Variable, PRINT, String, METHOD_CLOSE},
 		},
 		{
 			name: "Parameterized Method",
@@ -92,12 +92,12 @@ I NEED YOUR CLOTHES YOUR BOOTS AND YOUR MOTORCYCLE arg1
 GIVE THESE PEOPLE AIR
 TALK TO THE HAND "hello world"
 HASTA LA VISTA, BABY`,
-			token_types: []int{TK_METHOD_OPEN, Variable, TK_DECLARE_PARAMETER, Variable, TK_END_PARAMETER_DECLARATION, TK_PRINT, String, TK_METHOD_CLOSE},
+			token_types: []int{METHOD_OPEN, Variable, DECLARE_PARAMETER, Variable, END_PARAMETER_DECLARATION, PRINT, String, METHOD_CLOSE},
 		},
 		{
 			name:        "Negative Integers",
 			source:      "TALK TO THE HAND -150",
-			token_types: []int{TK_PRINT, Integer},
+			token_types: []int{PRINT, Integer},
 		},
 	}
 
@@ -172,15 +172,15 @@ func tokenTypeToString(typ int) string {
 		return "String"
 	case Variable:
 		return "Variable"
-	case TK_MAIN_OPEN:
+	case MAIN_OPEN:
 		return "main() Open"
-	case TK_MAIN_CLOSE:
+	case MAIN_CLOSE:
 		return "main() Close"
-	case TK_METHOD_OPEN:
+	case METHOD_OPEN:
 		return "method() Open"
-	case TK_METHOD_CLOSE:
+	case METHOD_CLOSE:
 		return "method() Close"
-	case TK_PRINT:
+	case PRINT:
 		return "print()"
 	}
 	if typ < 128 {

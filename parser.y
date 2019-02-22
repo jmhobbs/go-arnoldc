@@ -18,8 +18,8 @@ func setProgram(l yyLexer, v Program) {
   expressions []Expression
   block       Block
   blocks      []Block
-  function    Function
-  functions   []Function
+  function    Method
+  functions   []Method
   program     Program
 }
 
@@ -29,19 +29,19 @@ func setProgram(l yyLexer, v Program) {
 %token <str> String
 %token <integer> Integer
 
-%token TK_MAIN_OPEN TK_MAIN_CLOSE
-%token TK_METHOD_OPEN TK_METHOD_CLOSE TK_DECLARE_PARAMETER TK_END_PARAMETER_DECLARATION TK_RETURN
-%token TK_CALL_METHOD TK_ASSIGN_FROM_CALL
-%token TK_PRINT
-%token TK_TRUE TK_FALSE
-%token TK_DECLARE TK_INITIALIZE
-%token TK_ASSIGNMENT TK_FIRST_OPERAND TK_ASSIGNMENT_END
-%token TK_ADD TK_SUBTRACT TK_MULTIPLY TK_DIVIDE
-%token TK_EQUAL_TO TK_GREATER_THAN TK_OR TK_AND
-%token TK_IF TK_ELSE TK_END_IF
-%token TK_WHILE TK_END_WHILE
+%token MAIN_OPEN MAIN_CLOSE
+%token METHOD_OPEN METHOD_CLOSE DECLARE_PARAMETER END_PARAMETER_DECLARATION RETURN
+%token CALL_METHOD ASSIGN_FROM_CALL
+%token PRINT
+%token TRUE FALSE
+%token DECLARE INITIALIZE
+%token ASSIGNMENT FIRST_OPERAND ASSIGNMENT_END
+%token ADD SUBTRACT MULTIPLY DIVIDE
+%token EQUAL_TO GREATER_THAN OR AND
+%token IF ELSE END_IF IF_TRUE IF_FALSE
+%token WHILE END_WHILE
 
-%type <str> arithmetic_token
+%type <integer> arithmetic_token
 %type <strs> parameters
 %type <value> value number
 %type <values> values
@@ -51,16 +51,6 @@ func setProgram(l yyLexer, v Program) {
 %type <function> main method
 %type <functions> methods
 %type <program> program
-
-%type <str> TK_PRINT
-%type <str> TK_DECLARE TK_INITIALIZE
-%type <str> TK_ASSIGNMENT TK_FIRST_OPERAND
-%type <str> TK_ADD TK_SUBTRACT TK_MULTIPLY TK_DIVIDE
-%type <str> TK_EQUAL_TO TK_GREATER_THAN TK_OR TK_AND
-%type <str> TK_IF TK_ELSE TK_END_IF
-%type <str> TK_WHILE TK_END_WHILE
-%type <str> TK_CALL_METHOD TK_ASSIGN_FROM_CALL
-%type <str> TK_RETURN
 
 %start program
 
@@ -75,14 +65,14 @@ program: main
            setProgram(yylex, Program{Main: $1, Methods: $2})
          }
 
-main: TK_MAIN_OPEN statements TK_MAIN_CLOSE
+main: MAIN_OPEN statements MAIN_CLOSE
       {
-        $$ = Function{Name: "", Arguments: []string{}, Statements: $2}
+        $$ = Method{Name: "", Statements: $2}
       }
 
 methods: method
          {
-           $$ = []Function{$1}
+           $$ = []Method{$1}
          }
        | methods method
          {
@@ -90,20 +80,20 @@ methods: method
            $$ = $1
          }
 
-method: TK_METHOD_OPEN Variable statements TK_METHOD_CLOSE
+method: METHOD_OPEN Variable statements METHOD_CLOSE
         {
-          $$ = Function{$2, []string{}, $3}
+          $$ = Method{$2, []string{}, $3}
         }
-      | TK_METHOD_OPEN Variable parameters TK_END_PARAMETER_DECLARATION statements TK_METHOD_CLOSE
+      | METHOD_OPEN Variable parameters END_PARAMETER_DECLARATION statements METHOD_CLOSE
         {
-          $$ = Function{$2, $3, $5}
+          $$ = Method{$2, $3, $5}
         }
 
-parameters: TK_DECLARE_PARAMETER Variable
+parameters: DECLARE_PARAMETER Variable
             {
               $$ = []string{$2}
             }
-          | parameters TK_DECLARE_PARAMETER Variable 
+          | parameters DECLARE_PARAMETER Variable
             {
               $1 = append($1, $3)
               $$ = $1
@@ -128,54 +118,54 @@ statements: expression
                $$ = $1
              }
 
-expression: TK_PRINT value
+expression: PRINT value
             {
-              $$ = Expression{$1, []Value{$2}}
+              $$ = Expression{PRINT, []Value{$2}}
             }
-          | TK_DECLARE Variable TK_INITIALIZE number
+          | DECLARE Variable INITIALIZE number
             {
-              $$ = Expression{$1, []Value{VariableValue{$2}, $4}}
+              $$ = Expression{DECLARE, []Value{VariableValue{$2}, $4}}
             }
-          | TK_RETURN value
+          | RETURN value
             {
-              $$ = Expression{$1, []Value{$2}}
+              $$ = Expression{RETURN, []Value{$2}}
             }
           | invoke
 
-invoke: TK_CALL_METHOD Variable
+invoke: CALL_METHOD Variable
         {
-          $$ = Expression{$1, []Value{VariableValue{$2}}}
+          $$ = Expression{CALL_METHOD, []Value{VariableValue{$2}}}
         }
-      | TK_CALL_METHOD Variable values
+      | CALL_METHOD Variable values
         {
           $3 = append([]Value{VariableValue{$2}}, $3...)
-          $$ = Expression{$1, $3}
+          $$ = Expression{CALL_METHOD, $3}
         }
-      | TK_ASSIGN_FROM_CALL Variable TK_CALL_METHOD Variable
+      | ASSIGN_FROM_CALL Variable CALL_METHOD Variable
         {
-          $$ = Expression{$1, []Value{VariableValue{$2}, VariableValue{$4}}}
+          $$ = Expression{ASSIGN_FROM_CALL, []Value{VariableValue{$2}, VariableValue{$4}}}
         }
-      | TK_ASSIGN_FROM_CALL Variable TK_CALL_METHOD Variable values
+      | ASSIGN_FROM_CALL Variable CALL_METHOD Variable values
         {
           $5 = append([]Value{VariableValue{$2}, VariableValue{$4}}, $5...)
-          $$ = Expression{$1, $5}
+          $$ = Expression{ASSIGN_FROM_CALL, $5}
         }
 
-block: TK_ASSIGNMENT Variable TK_FIRST_OPERAND number arithmetics TK_ASSIGNMENT_END
+block: ASSIGNMENT Variable FIRST_OPERAND number arithmetics ASSIGNMENT_END
        {
-         $$ = Block{$1, []Value{VariableValue{$2}}, append([]Statement{Expression{$3, []Value{$4}}}, $5...)}
+         $$ = Block{ASSIGNMENT, []Value{VariableValue{$2}}, append([]Statement{Expression{FIRST_OPERAND, []Value{$4}}}, $5...)}
        }
-     | TK_IF number statements TK_END_IF
+     | IF number statements END_IF
        {
-         $$ = Block{$1, []Value{$2}, []Statement{Block{"__TRUE", []Value{}, $3}}}
+         $$ = Block{IF, []Value{$2}, []Statement{Block{IF_TRUE, []Value{}, $3}}}
        }
-     | TK_IF number statements TK_ELSE statements TK_END_IF
+     | IF number statements ELSE statements END_IF
        {
-         $$ = Block{$1, []Value{$2}, []Statement{Block{"__TRUE", []Value{}, $3}, Block{"__FALSE", []Value{}, $5}}}
+         $$ = Block{IF, []Value{$2}, []Statement{Block{IF_TRUE, []Value{}, $3}, Block{IF_FALSE, []Value{}, $5}}}
        }
-     | TK_WHILE number statements TK_END_WHILE
+     | WHILE number statements END_WHILE
        {
-         $$ = Block{$1, []Value{$2}, $3}
+         $$ = Block{WHILE, []Value{$2}, $3}
        }
 
 
@@ -194,14 +184,38 @@ arithmetic: arithmetic_token number
               $$ = Expression{$1, []Value{$2}}
             }
 
-arithmetic_token: TK_SUBTRACT
-                | TK_ADD
-                | TK_MULTIPLY
-                | TK_DIVIDE
-                | TK_EQUAL_TO
-                | TK_GREATER_THAN
-                | TK_OR
-                | TK_AND
+arithmetic_token: SUBTRACT
+                  {
+                    $$ = SUBTRACT
+                  }
+                | ADD
+                  {
+                    $$ = ADD
+                  }
+                | MULTIPLY
+                  {
+                    $$ = MULTIPLY
+                  }
+                | DIVIDE
+                  {
+                    $$ = DIVIDE
+                  }
+                | EQUAL_TO
+                  {
+                    $$ = EQUAL_TO
+                  }
+                | GREATER_THAN
+                  {
+                    $$ = GREATER_THAN
+                  }
+                | OR
+                  {
+                    $$ = OR
+                  }
+                | AND
+                  {
+                    $$ = AND
+                  }
 
 number: Variable
          {
@@ -211,11 +225,11 @@ number: Variable
          {
            $$ = IntegerValue{$1}
          }
-       | TK_TRUE
+       | TRUE
          {
            $$ = IntegerValue{1}
          }
-       | TK_FALSE
+       | FALSE
          {
            $$ = IntegerValue{0}
          }

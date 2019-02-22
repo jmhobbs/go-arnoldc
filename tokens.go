@@ -9,53 +9,62 @@ var (
 
 func init() {
 	macros = map[string]int{
-		"NO PROBLEMO": TK_TRUE,
-		"I LIED":      TK_FALSE,
+		"NO PROBLEMO": TRUE,
+		"I LIED":      FALSE,
 	}
 
 	instructions = map[string]int{
 		// Functions
-		"IT'S SHOWTIME":                                      TK_MAIN_OPEN,
-		"YOU HAVE BEEN TERMINATED":                           TK_MAIN_CLOSE,
-		"LISTEN TO ME VERY CAREFULLY":                        TK_METHOD_OPEN,
-		"HASTA LA VISTA, BABY":                               TK_METHOD_CLOSE,
-		"I NEED YOUR CLOTHES YOUR BOOTS AND YOUR MOTORCYCLE": TK_DECLARE_PARAMETER,
-		"GIVE THESE PEOPLE AIR":                              TK_END_PARAMETER_DECLARATION,
-		"I'LL BE BACK":                                       TK_RETURN,
-		"DO IT NOW":                                          TK_CALL_METHOD,
-		"GET YOUR ASS TO MARS":                               TK_ASSIGN_FROM_CALL,
+		"IT'S SHOWTIME":                                      MAIN_OPEN,
+		"YOU HAVE BEEN TERMINATED":                           MAIN_CLOSE,
+		"LISTEN TO ME VERY CAREFULLY":                        METHOD_OPEN,
+		"HASTA LA VISTA, BABY":                               METHOD_CLOSE,
+		"I NEED YOUR CLOTHES YOUR BOOTS AND YOUR MOTORCYCLE": DECLARE_PARAMETER,
+		"GIVE THESE PEOPLE AIR":                              END_PARAMETER_DECLARATION,
+		"I'LL BE BACK":                                       RETURN,
+		"DO IT NOW":                                          CALL_METHOD,
+		"GET YOUR ASS TO MARS":                               ASSIGN_FROM_CALL,
 
 		// Simple built ins
-		"TALK TO THE HAND": TK_PRINT,
+		"TALK TO THE HAND": PRINT,
 
 		// Variable declaration
-		"HEY CHRISTMAS TREE": TK_DECLARE,
-		"YOU SET US UP":      TK_INITIALIZE,
+		"HEY CHRISTMAS TREE": DECLARE,
+		"YOU SET US UP":      INITIALIZE,
 
 		// Munging
-		"GET TO THE CHOPPER":    TK_ASSIGNMENT,
-		"ENOUGH TALK":           TK_ASSIGNMENT_END,
-		"HERE IS MY INVITATION": TK_FIRST_OPERAND,
+		"GET TO THE CHOPPER":    ASSIGNMENT,
+		"ENOUGH TALK":           ASSIGNMENT_END,
+		"HERE IS MY INVITATION": FIRST_OPERAND,
 
 		// Arithmetic
-		"GET UP":          TK_ADD,
-		"GET DOWN":        TK_SUBTRACT,
-		"YOU'RE FIRED":    TK_MULTIPLY,
-		"HE HAD TO SPLIT": TK_DIVIDE,
+		"GET UP":          ADD,
+		"GET DOWN":        SUBTRACT,
+		"YOU'RE FIRED":    MULTIPLY,
+		"HE HAD TO SPLIT": DIVIDE,
 
 		// Logic
-		"YOU ARE NOT YOU YOU ARE ME": TK_EQUAL_TO,
-		"LET OFF SOME STEAM BENNET":  TK_GREATER_THAN,
-		"CONSIDER THAT A DIVORCE":    TK_OR,
-		"KNOCK KNOCK":                TK_AND,
+		"YOU ARE NOT YOU YOU ARE ME": EQUAL_TO,
+		"LET OFF SOME STEAM BENNET":  GREATER_THAN,
+		"CONSIDER THAT A DIVORCE":    OR,
+		"KNOCK KNOCK":                AND,
 
 		// If/Else
-		"BECAUSE I'M GOING TO SAY PLEASE": TK_IF,
-		"BULLSHIT":                        TK_ELSE,
-		"YOU HAVE NO RESPECT FOR LOGIC":   TK_END_IF,
+		"BECAUSE I'M GOING TO SAY PLEASE": IF,
+		"BULLSHIT":                        ELSE,
+		"YOU HAVE NO RESPECT FOR LOGIC":   END_IF,
 
 		// While loops
-		"STICK AROUND": TK_WHILE,
-		"CHILL":        TK_END_WHILE,
+		"STICK AROUND": WHILE,
+		"CHILL":        END_WHILE,
 	}
+}
+
+func instructionToString(instruction int) string {
+	for s, tk := range instructions {
+		if tk == instruction {
+			return s
+		}
+	}
+	return "UNKNOWN"
 }
