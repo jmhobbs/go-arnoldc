@@ -141,7 +141,7 @@ func (a *ArnoldC) scanNormal(lval *yySymType) int {
 			return a.scanMacro(lval)
 		case b == '"':
 			return a.scanString(lval)
-		case unicode.IsDigit(rune(b)):
+		case unicode.IsDigit(rune(b)) || b == '-':
 			a.backup()
 			return a.scanInteger(lval)
 		case unicode.IsLetter(rune(b)):
@@ -226,10 +226,13 @@ func (a *ArnoldC) scanInteger(lval *yySymType) int {
 	buf := bytes.NewBuffer(nil)
 	for b := a.next(); ; b = a.next() {
 		a.log("%q  %d", b, b)
-		if unicode.IsDigit(rune(b)) {
+		// TODO: - should only be allowed for the first byte
+		if unicode.IsDigit(rune(b)) || b == '-' {
 			buf.WriteByte(b)
 		} else {
-			a.backup()
+			if 0 != b {
+				a.backup()
+			}
 			val, err := strconv.Atoi(buf.String())
 			if err != nil {
 				a.log("!! Invalid Integer")

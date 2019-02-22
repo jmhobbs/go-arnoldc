@@ -94,6 +94,11 @@ TALK TO THE HAND "hello world"
 HASTA LA VISTA, BABY`,
 			token_types: []int{TK_METHOD_OPEN, Variable, TK_DECLARE_PARAMETER, Variable, TK_END_PARAMETER_DECLARATION, TK_PRINT, String, TK_METHOD_CLOSE},
 		},
+		{
+			name:        "Negative Integers",
+			source:      "TALK TO THE HAND -150",
+			token_types: []int{TK_PRINT, Integer},
+		},
 	}
 
 	var (
