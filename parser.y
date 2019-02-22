@@ -94,18 +94,8 @@ method: TK_METHOD_OPEN Variable statements TK_METHOD_CLOSE
         {
           $$ = Function{$2, []string{}, $3}
         }
-      | TK_METHOD_OPEN Variable statements TK_RETURN value TK_METHOD_CLOSE
-        {
-          $3 = append($3, Expression{$4, []Value{$5}})
-          $$ = Function{$2, []string{}, $3}
-        }
       | TK_METHOD_OPEN Variable parameters TK_END_PARAMETER_DECLARATION statements TK_METHOD_CLOSE
         {
-          $$ = Function{$2, $3, $5}
-        }
-      | TK_METHOD_OPEN Variable parameters TK_END_PARAMETER_DECLARATION statements TK_RETURN value TK_METHOD_CLOSE
-        {
-          $5 = append($5, Expression{$6, []Value{$7}})
           $$ = Function{$2, $3, $5}
         }
 
@@ -145,6 +135,10 @@ expression: TK_PRINT value
           | TK_DECLARE Variable TK_INITIALIZE number
             {
               $$ = Expression{$1, []Value{VariableValue{$2}, $4}}
+            }
+          | TK_RETURN value
+            {
+              $$ = Expression{$1, []Value{$2}}
             }
           | invoke
 

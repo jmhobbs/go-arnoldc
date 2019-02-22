@@ -45,28 +45,10 @@ func (i *Interpreter) invokeFunction(f *arnoldc.Function, arguments []arnoldc.Va
 		vars.Set(name, v)
 	}
 
-	err := i.executeStatements(f.Statements, vars)
-	if err != nil {
-		return 0, err
-	}
-
-	// TODO: I do not like doing it like this.
-	lastStatement := f.Statements[len(f.Statements)-1]
-	if arnoldc.ExpressionType == lastStatement.Type() && lastStatement.(arnoldc.Expression).Instruction == "I'LL BE BACK" {
-		expression := lastStatement.(arnoldc.Expression)
-
-		v, err := vars.Get(expression.Args[0])
-		if err != nil {
-			return 0, fmt.Errorf("invalid return value; %v", err)
-		}
-
-		return v, nil
-	}
-
-	return 0, nil
+	return i.executeStatements(f.Statements, vars)
 }
 
-func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *scope) error {
+func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *scope) (int, error) {
 	for _, statement := range statements {
 		if arnoldc.ExpressionType == statement.Type() {
 			expression := statement.(arnoldc.Expression)
@@ -75,7 +57,7 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *sc
 			case "TALK TO THE HAND":
 				value, err := vars.resolveValue(expression.Args[0])
 				if err != nil {
-					return fmt.Errorf("runtime error; %v", err)
+					return 0, fmt.Errorf("runtime error; %v", err)
 				}
 				fmt.Fprintln(i.stdout, value)
 			case "HEY CHRISTMAS TREE":
@@ -85,81 +67,84 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *sc
 				methodName := expression.Args[1].Value().(string)
 				function, ok := i.method(methodName)
 				if !ok {
-					return fmt.Errorf("unknown method; %q", methodName)
+					return 0, fmt.Errorf("unknown method; %q", methodName)
 				}
 				ret, err := i.invokeFunction(function, expression.Args[2:], newScope(vars))
 				if err != nil {
-					return fmt.Errorf("runtime err; %v", err)
+					return 0, fmt.Errorf("runtime err; %v", err)
 				}
 				vars.Set(returnName, ret)
 			case "DO IT NOW":
 				methodName := expression.Args[0].Value().(string)
 				function, ok := i.method(methodName)
 				if !ok {
-					return fmt.Errorf("unknown method; %q", methodName)
+					return 0, fmt.Errorf("unknown method; %q", methodName)
 				}
 				_, err := i.invokeFunction(function, expression.Args[1:], newScope(vars))
 				if err != nil {
-					return fmt.Errorf("runtime err; %v", err)
+					return 0, fmt.Errorf("runtime error; %v", err)
 				}
 			case "I'LL BE BACK":
-				// NO-OP Handled in invokeFunction
-				continue
+				v, err := vars.Get(expression.Args[0])
+				if err != nil {
+					return 0, fmt.Errorf("invalid return value; %v", err)
+				}
+				return v, nil
 			default:
-				return fmt.Errorf("runtime error; unknown instruction %q", expression.Instruction)
+				return 0, fmt.Errorf("runtime error; unknown instruction %q", expression.Instruction)
 			}
 		} else {
 			block := statement.(arnoldc.Block)
 
 			switch block.Instruction {
 			case "GET TO THE CHOPPER":
-				if err := i.assigmentBlock(block, vars); err != nil {
-					return err
+				if _, err := i.assigmentBlock(block, vars); err != nil {
+					return 0, err
 				}
 			case "BECAUSE I'M GOING TO SAY PLEASE":
-				if err := i.ifElseBlock(block, vars); err != nil {
-					return err
+				if _, err := i.ifElseBlock(block, vars); err != nil {
+					return 0, err
 				}
 			case "STICK AROUND":
-				if err := i.whileBlock(block, vars); err != nil {
-					return err
+				if _, err := i.whileBlock(block, vars); err != nil {
+					return 0, err
 				}
 			default:
-				return fmt.Errorf("runtime error; unknown block instruction %q", block.Instruction)
+				return 0, fmt.Errorf("runtime error; unknown block instruction %q", block.Instruction)
 			}
 		}
 	}
-	return nil
+	return 0, nil
 }
 
 // Execute and return an Assignment Block
-func (i *Interpreter) assigmentBlock(block arnoldc.Block, parentScope *scope) error {
+func (i *Interpreter) assigmentBlock(block arnoldc.Block, parentScope *scope) (int, error) {
 	vars := newScope(parentScope)
 
 	v := block.Args[0]
 
 	if v.Type() != arnoldc.VariableType {
-		return fmt.Errorf("can not assign results to a non-variable")
+		return 0, fmt.Errorf("can not assign results to a non-variable")
 	}
 
 	// TODO: Setup Instruction
 	statement := block.Statements[0]
 	if arnoldc.ExpressionType != statement.Type() {
-		return fmt.Errorf("illegal block inside assignment")
+		return 0, fmt.Errorf("illegal block inside assignment")
 	}
 	expression := statement.(arnoldc.Expression)
 	if expression.Instruction != "HERE IS MY INVITATION" {
-		return fmt.Errorf("variable assignment must start with a first operand")
+		return 0, fmt.Errorf("variable assignment must start with a first operand")
 	}
 
 	x, err := vars.Get(expression.Args[0])
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	for _, statement := range block.Statements[1:] {
 		if arnoldc.ExpressionType != statement.Type() {
-			return fmt.Errorf("illegal block inside assignment: %q", statement.(arnoldc.Block).Instruction)
+			return 0, fmt.Errorf("illegal block inside assignment: %q", statement.(arnoldc.Block).Instruction)
 		}
 
 		expression := statement.(arnoldc.Expression)
@@ -167,7 +152,7 @@ func (i *Interpreter) assigmentBlock(block arnoldc.Block, parentScope *scope) er
 		// All of these should have exactly one argument.
 		arg, err := vars.Get(expression.Args[0])
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		switch expression.Instruction {
@@ -204,19 +189,19 @@ func (i *Interpreter) assigmentBlock(block arnoldc.Block, parentScope *scope) er
 				x = FALSE
 			}
 		default:
-			return fmt.Errorf("illegal statement inside assignment: %q", expression.Instruction)
+			return 0, fmt.Errorf("illegal statement inside assignment: %q", expression.Instruction)
 		}
 	}
 
 	parentScope.Set(v.Value().(string), x)
 
-	return nil
+	return 0, nil
 }
 
-func (i *Interpreter) ifElseBlock(block arnoldc.Block, vars *scope) error {
+func (i *Interpreter) ifElseBlock(block arnoldc.Block, vars *scope) (int, error) {
 	v, err := vars.Get(block.Args[0])
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if v != FALSE {
@@ -227,29 +212,29 @@ func (i *Interpreter) ifElseBlock(block arnoldc.Block, vars *scope) error {
 		return i.executeStatements(elseBlock.Statements, vars)
 	}
 
-	return nil
+	return 0, nil
 }
 
-func (i *Interpreter) whileBlock(block arnoldc.Block, parentScope *scope) error {
+func (i *Interpreter) whileBlock(block arnoldc.Block, parentScope *scope) (int, error) {
 	vars := newScope(parentScope)
 
 	for {
 		v, err := vars.Get(block.Args[0])
 		if err != nil {
-			return err
+			return 0, err
 		}
 		if v == FALSE {
 			break
 		}
 
-		err = i.executeStatements(block.Statements, vars)
+		_, err = i.executeStatements(block.Statements, vars)
 
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
-	return nil
+	return 0, nil
 }
 
 func (i *Interpreter) method(name string) (*arnoldc.Function, bool) {
