@@ -42,7 +42,7 @@ func (i *Interpreter) invokeMethod(f *arnoldc.Method, arguments []arnoldc.Value,
 		if err != nil {
 			return 0, fmt.Errorf("invalid argument; %v", arguments[i])
 		}
-		vars.Set(name, v)
+		vars.Declare(name, v)
 	}
 
 	return i.executeStatements(f.Statements, vars)
@@ -61,7 +61,7 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *sc
 				}
 				fmt.Fprintln(i.stdout, value)
 			case arnoldc.DECLARE:
-				vars.Set(expression.Args[0].Value().(string), expression.Args[1].Value().(int))
+				vars.Declare(expression.Args[0].Value().(string), expression.Args[1].Value().(int))
 			case arnoldc.ASSIGN_FROM_CALL:
 				returnName := expression.Args[0].Value().(string)
 				methodName := expression.Args[1].Value().(string)
@@ -73,7 +73,10 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *sc
 				if err != nil {
 					return 0, fmt.Errorf("runtime err; %v", err)
 				}
-				vars.Set(returnName, ret)
+				err = vars.Set(returnName, ret)
+				if err != nil {
+					return 0, err
+				}
 			case arnoldc.CALL_METHOD:
 				methodName := expression.Args[0].Value().(string)
 				function, ok := i.method(methodName)
@@ -118,9 +121,7 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *sc
 }
 
 // Execute and return an Assignment Block
-func (i *Interpreter) assigmentBlock(block arnoldc.Block, parentScope *scope) (int, error) {
-	vars := newScope(parentScope)
-
+func (i *Interpreter) assigmentBlock(block arnoldc.Block, vars *scope) (int, error) {
 	v := block.Args[0]
 
 	if v.Type() != arnoldc.VariableType {
@@ -193,9 +194,9 @@ func (i *Interpreter) assigmentBlock(block arnoldc.Block, parentScope *scope) (i
 		}
 	}
 
-	parentScope.Set(v.Value().(string), x)
+	err = vars.Set(v.Value().(string), x)
 
-	return 0, nil
+	return 0, err
 }
 
 func (i *Interpreter) ifElseBlock(block arnoldc.Block, vars *scope) (int, error) {

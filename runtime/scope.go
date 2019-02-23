@@ -15,8 +15,21 @@ func newScope(parent *scope) *scope {
 	return &scope{parent, make(map[string]int)}
 }
 
-func (s *scope) Set(name string, value int) {
+func (s *scope) Declare(name string, initial_value int) {
+	s.variables[name] = initial_value
+}
+
+func (s *scope) Set(name string, value int) error {
+	// TODO: This check should run after parsing to catch early
+	if _, ok := s.variables[name]; !ok {
+		if s.parent != nil {
+			return s.parent.Set(name, value)
+		}
+		return fmt.Errorf("undefined variable %q", name)
+	}
 	s.variables[name] = value
+
+	return nil
 }
 
 // Resolve a value to it's underlying integer, following variable references and up the scope chain.
