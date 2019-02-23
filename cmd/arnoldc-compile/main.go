@@ -48,16 +48,14 @@ func main() {
 
 	f, err := os.Open(sourcefile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error opening program: %v", err)
-		os.Exit(1)
+		log.Fatalf("error opening program: %v", err)
 	}
 	defer f.Close()
 
 	a := arnoldc.New(f)
 	program, err := a.Parse()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error parsing program: %v", err)
-		os.Exit(1)
+		log.Fatalf("error parsing program: %v", err)
 	}
 
 	var out *os.File
@@ -65,15 +63,13 @@ func main() {
 	if goOut != "" {
 		out, err = os.OpenFile(goOut, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error opening go source output file: %v", err)
-			os.Exit(1)
+			log.Fatalf("error opening go source output file: %v", err)
 		}
 		defer out.Close()
 	} else {
 		out, err = ioutil.TempFile("", fmt.Sprintf("*_%s.arnoldc.go", filepath.Base(sourcefile)))
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error opening tempfile: %v", err)
-			os.Exit(1)
+			log.Fatalf("error opening tempfile: %v", err)
 		}
 		defer func() {
 			out.Close()
@@ -83,20 +79,26 @@ func main() {
 
 	err = writePreamble(out)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	err = writeMain(out, program.Main)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+
+	for _, method := range program.Methods {
+		err = writeMethod(out, method)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	cmd := exec.Command("go", "build", "-o", binOut, out.Name())
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error compiling with go: %v", err)
-		fmt.Fprintf(os.Stderr, "command output: %q", stdoutStderr)
-		os.Exit(1)
+		log.Printf("error compiling with go: %v", err)
+		log.Fatalf("command output: %q", stdoutStderr)
 	}
 }
 
@@ -117,7 +119,46 @@ func writeMain(out io.Writer, main arnoldc.Method) error {
 		return err
 	}
 
-	for _, statement := range main.Statements {
+	if err = writeStatements(out, main.Statements); err != nil {
+		return err
+	}
+
+	if _, err = out.Write([]byte("}\n\n")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func writeMethod(out io.Writer, method arnoldc.Method) error {
+	var err error
+
+	if _, err = fmt.Fprintf(out, "func %s(", method.Name); err != nil {
+		return err
+	}
+	if len(method.Parameters) > 0 {
+		if _, err = fmt.Fprintf(out, "%s int", strings.Join(method.Parameters, ", ")); err != nil {
+			return err
+		}
+	}
+	if _, err = fmt.Fprint(out, ") int {\n"); err != nil {
+		return err
+	}
+
+	if err = writeStatements(out, method.Statements); err != nil {
+		return err
+	}
+
+	if _, err = fmt.Fprint(out, "return 0 // saftey return\n}\n\n"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func writeStatements(out io.Writer, statements []arnoldc.Statement) error {
+	var err error
+
+	for _, statement := range statements {
 		if arnoldc.ExpressionType == statement.Type() {
 			expression := statement.(arnoldc.Expression)
 			switch expression.Instruction {
@@ -138,12 +179,52 @@ func writeMain(out io.Writer, main arnoldc.Method) error {
 				if err != nil {
 					return err
 				}
+			case arnoldc.ASSIGN_FROM_CALL:
+				returnName := expression.Args[0].Value().(string)
+				methodName := expression.Args[1].Value().(string)
+				if _, err := fmt.Fprintf(out, "%s = %s(", returnName, methodName); err != nil {
+					return err
+				}
+				if len(expression.Args) > 2 {
+					argStrings := []string{}
+					for _, arg := range expression.Args[2:] {
+						switch arg.Type() {
+						case arnoldc.VariableType:
+							argStrings = append(argStrings, expression.Args[0].Value().(string))
+						case arnoldc.IntegerType:
+							argStrings = append(argStrings, string(expression.Args[0].Value().(int)))
+						case arnoldc.StringType:
+							argStrings = append(argStrings, fmt.Sprintf("%q", expression.Args[0].Value()))
+						}
+					}
+					if _, err := fmt.Fprintf(out, strings.Join(argStrings, ", ")); err != nil {
+						return err
+					}
+				}
+				if _, err := fmt.Fprintln(out, ")"); err != nil {
+					return err
+				}
+			case arnoldc.CALL_METHOD:
+				methodName := expression.Args[0].Value().(string)
+				if _, err := fmt.Fprintf(out, "%s()\n", methodName); err != nil {
+					return err
+				}
+			case arnoldc.RETURN:
+				var v string
+				ret := expression.Args[0]
+				switch ret.Type() {
+				case arnoldc.IntegerType:
+					v = string(ret.Value().(int))
+				case arnoldc.VariableType:
+					v = ret.Value().(string)
+				case arnoldc.StringType:
+					fmt.Sprintf("%q", ret.Value())
+				}
+				if _, err := fmt.Fprintf(out, "return %s\n", v); err != nil {
+					return err
+				}
 			}
 		}
-	}
-
-	if _, err = out.Write([]byte("}")); err != nil {
-		return err
 	}
 
 	return nil
