@@ -36,7 +36,7 @@ func (i *Interpreter) invokeMethod(f *arnoldc.Method, arguments []arnoldc.Value,
 		return 0, fmt.Errorf("incorrect number of arguments for %q", f.Name)
 	}
 
-	vars := newScope(parentScope)
+	vars := newScope(nil)
 	for i, name := range f.Parameters {
 		v, err := parentScope.Get(arguments[i])
 		if err != nil {
@@ -69,7 +69,7 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *sc
 				if !ok {
 					return 0, fmt.Errorf("unknown method; %q", methodName)
 				}
-				ret, err := i.invokeMethod(function, expression.Args[2:], newScope(vars))
+				ret, err := i.invokeMethod(function, expression.Args[2:], vars)
 				if err != nil {
 					return 0, fmt.Errorf("runtime err; %v", err)
 				}
@@ -80,7 +80,7 @@ func (i *Interpreter) executeStatements(statements []arnoldc.Statement, vars *sc
 				if !ok {
 					return 0, fmt.Errorf("unknown method; %q", methodName)
 				}
-				_, err := i.invokeMethod(function, expression.Args[1:], newScope(vars))
+				_, err := i.invokeMethod(function, expression.Args[1:], vars)
 				if err != nil {
 					return 0, fmt.Errorf("runtime error; %v", err)
 				}
