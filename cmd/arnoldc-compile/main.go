@@ -5,17 +5,46 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	arnoldc "github.com/jmhobbs/go-arnoldc"
 )
 
+func init() {
+	log.SetFlags(0)
+}
+
 func main() {
+	var (
+		binOut  string
+		goOut   string
+		verbose bool
+	)
+
+	flag.BoolVar(&verbose, "v", false, "Lots of debugging output.")
+	flag.StringVar(&goOut, "g", "", "Intermediate go source file output. Defaults to a tempfile that is automatically removed.")
+	flag.StringVar(&binOut, "o", "", "Output filename. Defaults to input file without arnoldc extension.")
 	flag.Parse()
 
 	sourcefile := flag.Arg(0)
+
+	if binOut == "" {
+		binOut = strings.TrimSuffix(filepath.Base(sourcefile), ".arnoldc")
+	}
+
+	if verbose {
+		log.Println("Source ArnoldC file", sourcefile)
+		log.Println("Writing binary to", binOut)
+		if goOut != "" {
+			log.Println("Writing intermediate go source to", goOut)
+		} else {
+			log.Println("Writing intermediate go source to a temp file.")
+		}
+	}
 
 	f, err := os.Open(sourcefile)
 	if err != nil {
@@ -31,16 +60,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	out, err := ioutil.TempFile("", fmt.Sprintf("*_%s.arnoldc.go", filepath.Base(sourcefile)))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error opening tempfile: %v", err)
-		os.Exit(1)
+	var out *os.File
+
+	if goOut != "" {
+		out, err = os.OpenFile(goOut, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error opening go source output file: %v", err)
+			os.Exit(1)
+		}
+		defer out.Close()
+	} else {
+		out, err = ioutil.TempFile("", fmt.Sprintf("*_%s.arnoldc.go", filepath.Base(sourcefile)))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error opening tempfile: %v", err)
+			os.Exit(1)
+		}
+		defer func() {
+			out.Close()
+			os.Remove(out.Name())
+		}()
 	}
-	defer func() {
-		out.Close()
-		os.Remove(out.Name())
-	}()
-	fmt.Fprintf(os.Stderr, out.Name())
 
 	err = writePreamble(out)
 	if err != nil {
@@ -52,13 +91,13 @@ func main() {
 		panic(err)
 	}
 
-	cmd := exec.Command("go", "build", "-o", "./compiled", out.Name())
+	cmd := exec.Command("go", "build", "-o", binOut, out.Name())
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error compiling with go: %v", err)
+		fmt.Fprintf(os.Stderr, "command output: %q", stdoutStderr)
 		os.Exit(1)
 	}
-	fmt.Fprintln(os.Stdout, string(stdoutStderr))
 }
 
 func writePreamble(out io.Writer) error {
