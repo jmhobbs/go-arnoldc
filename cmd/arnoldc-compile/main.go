@@ -295,12 +295,16 @@ func writeStatements(out io.Writer, statements []arnoldc.Statement) error {
 				if _, err = fmt.Fprintf(out, "}\n"); err != nil {
 					return err
 				}
-				/*
-					case arnoldc.WHILE:
-						if _, err := i.whileBlock(block, vars); err != nil {
-							return 0, err
-						}
-				*/
+			case arnoldc.WHILE:
+				if _, err = fmt.Fprintf(out, "for {\nif %s == 0 {\nbreak\n}\n", goStringForValue(block.Args[0])); err != nil {
+					return err
+				}
+				if err = writeStatements(out, block.Statements); err != nil {
+					return err
+				}
+				if _, err = fmt.Fprintf(out, "}\n"); err != nil {
+					return err
+				}
 			default:
 				return fmt.Errorf("runtime error; unknown block instruction %q", block.Instruction)
 			}
