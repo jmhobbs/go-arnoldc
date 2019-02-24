@@ -170,7 +170,7 @@ func (a *ArnoldC) scanString(lval *yySymType) int {
 		}
 	}
 
-	return 0
+	return LexError
 }
 
 func (a *ArnoldC) scanVariable(lval *yySymType) int {
@@ -190,8 +190,6 @@ func (a *ArnoldC) scanVariable(lval *yySymType) int {
 			return Variable
 		}
 	}
-
-	return 0
 }
 
 func (a *ArnoldC) scanMacro(lval *yySymType) int {
@@ -217,8 +215,6 @@ func (a *ArnoldC) scanMacro(lval *yySymType) int {
 			return tk
 		}
 	}
-
-	return 0
 }
 
 func (a *ArnoldC) scanInteger(lval *yySymType) int {
@@ -244,6 +240,4 @@ func (a *ArnoldC) scanInteger(lval *yySymType) int {
 			return Integer
 		}
 	}
-
-	return 0
 }

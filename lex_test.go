@@ -16,6 +16,16 @@ func TestLex(t *testing.T) {
 		token_types []int
 	}{
 		{
+			name:        "Ignore Spaces",
+			source:      " \t",
+			token_types: []int{},
+		},
+		{
+			name:        "Passthrough Non-Trigger Characters",
+			source:      "TALK TO THE HAND {",
+			token_types: []int{PRINT, int('{')},
+		},
+		{
 			name:        "Invalid Statement",
 			source:      `THIS IS NOT A STATEMENT`,
 			token_types: []int{LexError},
@@ -29,6 +39,11 @@ func TestLex(t *testing.T) {
 			name:        "Print String",
 			source:      `TALK TO THE HAND "hello world"`,
 			token_types: []int{PRINT, String},
+		},
+		{
+			name:        "Incomplete String",
+			source:      `TALK TO THE HAND "hello world`,
+			token_types: []int{PRINT, LexError},
 		},
 		{
 			name:        "Print Variable",
@@ -71,9 +86,19 @@ YOU HAVE BEEN TERMINATED`,
 			token_types: []int{DECLARE, Variable},
 		},
 		{
-			name:        "Bool Macro",
+			name:        "False Bool Macro",
 			source:      "YOU SET US UP @I LIED",
 			token_types: []int{INITIALIZE, FALSE},
+		},
+		{
+			name:        "True Bool Macro",
+			source:      "YOU SET US UP @NO PROBLEMO",
+			token_types: []int{INITIALIZE, TRUE},
+		},
+		{
+			name:        "Invalid Bool Macro",
+			source:      "YOU SET US UP @NOT REAL",
+			token_types: []int{INITIALIZE, LexError},
 		},
 		{
 			name: "Void Method",
