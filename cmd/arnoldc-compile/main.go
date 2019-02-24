@@ -277,11 +277,25 @@ func writeStatements(out io.Writer, statements []arnoldc.Statement) error {
 					}
 				}
 
+			case arnoldc.IF:
+				if _, err = fmt.Fprintf(out, "if %s !=0 {\n", goStringForValue(block.Args[0])); err != nil {
+					return err
+				}
+				if err = writeStatements(out, block.Statements[0].(arnoldc.Block).Statements); err != nil {
+					return err
+				}
+				if len(block.Statements) > 1 {
+					if _, err = fmt.Fprintf(out, "} else {\n"); err != nil {
+						return err
+					}
+					if err = writeStatements(out, block.Statements[1].(arnoldc.Block).Statements); err != nil {
+						return err
+					}
+				}
+				if _, err = fmt.Fprintf(out, "}\n"); err != nil {
+					return err
+				}
 				/*
-					case arnoldc.IF:
-						if _, err := i.ifElseBlock(block, vars); err != nil {
-							return 0, err
-						}
 					case arnoldc.WHILE:
 						if _, err := i.whileBlock(block, vars); err != nil {
 							return 0, err
