@@ -4,10 +4,8 @@ import "fmt"
 
 type ValueType int
 
-// TODO: Or use the int types defined in parser.go?
 const (
-	LiteralType ValueType = iota
-	VariableType
+	VariableType ValueType = iota
 	StringType
 	IntegerType
 )
@@ -21,9 +19,10 @@ type StringValue struct {
 	str string
 }
 
-func (v StringValue) Type() ValueType    { return StringType }
-func (v StringValue) String() string     { return fmt.Sprintf("String(%q)", v.str) }
-func (v StringValue) Value() interface{} { return v.str }
+func (v StringValue) Type() ValueType       { return StringType }
+func (v StringValue) String() string        { return fmt.Sprintf("String(%q)", v.str) }
+func (v StringValue) Value() interface{}    { return v.str }
+func NewStringValue(str string) StringValue { return StringValue{str} }
 
 type VariableValue struct {
 	name string
@@ -35,10 +34,10 @@ func (v VariableValue) Value() interface{}       { return v.name }
 func NewVariableValue(name string) VariableValue { return VariableValue{name} }
 
 type IntegerValue struct {
-	v int
+	d int
 }
 
 func (v IntegerValue) Type() ValueType    { return IntegerType }
-func (v IntegerValue) String() string     { return fmt.Sprintf("Integer(%d)", v.v) }
-func (v IntegerValue) Value() interface{} { return v.v }
-func NewIntegerValue(v int) IntegerValue  { return IntegerValue{v} }
+func (v IntegerValue) String() string     { return fmt.Sprintf("Integer(%d)", v.d) }
+func (v IntegerValue) Value() interface{} { return v.d }
+func NewIntegerValue(d int) IntegerValue  { return IntegerValue{d} }
